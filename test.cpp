@@ -2,33 +2,32 @@
 #include <vector>
 #include <memory>
 
-#include "screen.h"
+#include "scene.h"
 #include "triangle.h"
 #include "sphere.h"
 #include "figure.h"
 #include "point.h"
+#include "vector.h"
+#include "ray.h"
+#include "3d_tree.h"
+
+#include "optional.h"
 
 int main() {
-    Screen screen(500, 500);
+    Scene scene(1000, 1000, 100, Point(0, 0, 0), Vector(0, 1, 0), Vector(1, 0, 0), Vector(0, 0, 1));
 
-    for (int x = 0; x < 100; ++x) {
-        for (int y = 0; y < 100; ++y) {
-            screen.setColor(x, y, Color(1, 0, 0));
-        }
-    }
+    std::unique_ptr<Triangle> trianglePointer(new Triangle(Point(-800, 210, -800), Point(-850, 210, 850), Point(800, 210, 850), ColorRGB(0, 1, 0)));
+    std::unique_ptr<Sphere> spherePointer(new Sphere(Point(-600, 450, 0), 300, ColorRGB(0, 1, 0)));
+    std::unique_ptr<Sphere> spherePointer1(new Sphere(Point(300, 450, 0), 300, ColorRGB(0, 1, 0)));
 
-    std::vector< std::unique_ptr<Figure> > figures;
-    
-    std::unique_ptr<Triangle> trianglePointer(new Triangle(Point(0, 0, 0 ), Point(1, 0, 0), Point(0, 1, 0)));
-    std::unique_ptr<Sphere> spherePointer(new Sphere(Point(3, 3, 3), 1));
-    figures.push_back(trianglePointer);
-    figures.push_back(spherePointer);
+    scene.addFigure(std::move(trianglePointer));
+    scene.addFigure(std::move(spherePointer));
+    scene.addFigure(std::move(spherePointer1));
 
-    for (int i = 0; i < figures.size(); ++i) {
-        std::cout << figures[i]->normal(Point(5, 5, 5)) << " ";
-    }
-    std::cout << std::endl;
+    //scene.addLighter(Point(0, 20, 0));
 
-    screen.draw();
+    scene.process();
+    scene.draw();
+
     return 0;
 }

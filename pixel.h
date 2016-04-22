@@ -1,18 +1,20 @@
 #ifndef PIXEL_KOSHKIN_493 
 #define PIXEL_KOSHKIN_493
 
+#include <math.h>
+
 #include "color.h"
 
 class Pixel {
 private:
     int x;
     int y;
-    Color color;
+    ColorRGB color;
     
 public:
     Pixel(int inX, int inY);
-    Pixel(int inX, int inY, const Color& inColor);
-    void setColor(const Color& inColor);
+    Pixel(int inX, int inY, const ColorRGB& inColor);
+    void setColor(const ColorRGB& inColor);
     int getX() const;
     int getY() const;
     double getRed() const;
@@ -22,9 +24,9 @@ public:
 
 Pixel::Pixel(int inX, int inY) : x(inX), y(inY), color() {}
 
-Pixel::Pixel(int inX, int inY, const Color& inColor) : x(inX), y(inY), color(inColor) {}
+Pixel::Pixel(int inX, int inY, const ColorRGB& inColor) : x(inX), y(inY), color(inColor) {}
 
-void Pixel::setColor(const Color& inColor) {
+void Pixel::setColor(const ColorRGB& inColor) {
     color = inColor;
 }
 
@@ -46,6 +48,14 @@ double Pixel::getGreen() const {
 
 double Pixel::getBlue() const {
     return color.getBlue();
+}
+
+double distance(const Point& point1, const Point& point2) {
+    return sqrt(
+            (point1.getX() - point2.getX()) * (point1.getX() - point2.getX()) +
+            (point1.getY() - point2.getY()) * (point1.getY() - point2.getY()) +
+            (point1.getZ() - point2.getZ()) * (point1.getZ() - point2.getZ())
+    );
 }
 
 #endif
