@@ -7,17 +7,20 @@
 class Lighter {
 private:
     Point place;
+    double power;
 public:
 
-    Lighter(const Point& point);
+    Lighter(const Lighter& lighter);
+    Lighter(const Point& point, double inPower = INTENSITY_CONSTANT);
     double intensity(const Point& point) const;
     Point getPlace() const;
 };
 
-Lighter::Lighter(const Point& inPlace) : place(inPlace) {}
+Lighter::Lighter(const Lighter& lighter) : place(lighter.place), power(lighter.power) {}
+Lighter::Lighter(const Point& inPlace, double inPower) : place(inPlace), power(inPower) {}
 
 double Lighter::intensity(const Point& point) const {
-    return INTENSITY_CONSTANT / ((distance(place, point)) * (distance(place, point)));
+    return power / ((distance(place, point)) * (distance(place, point)));
 }
 
 Point Lighter::getPlace() const {

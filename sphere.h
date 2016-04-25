@@ -23,8 +23,8 @@ public:
 
     virtual Vector normal(const Point& point) const;
     virtual bool touchesPoint(const Point& point) const;
-    virtual Optional<Point> intersectionWithRay(const Ray& ray) const;
     virtual ColorRGB getColor() const;
+    virtual Optional<double> getT(const Ray& ray) const;
 };
 
 Sphere::Sphere(const Point& inCenter, double inRadius, const ColorRGB& inColor) : center(inCenter), radius(inRadius), color(inColor) {}
@@ -39,28 +39,30 @@ bool Sphere::touchesPoint(const Point& point) const {
     return fabs(distance(point, center) - radius) < EPSILON;
 }
 
-Optional<Point> Sphere::intersectionWithRay(const Ray& ray) const {
+ColorRGB Sphere::getColor() const {
+    return color;
+}
+
+Optional<double> Sphere::getT(const Ray& ray) const {
     double A = ray.direction.squareLength();
     double B = 2 * scalarProduct(ray.direction, Vector(ray.start) - Vector(center));
     double C = (Vector(ray.start) - Vector(center)).squareLength() - radius * radius;
 
     if ((B * B - 4 * A * C) < 0) {
-        return Optional<Point>();
+        return Optional<double>();
     } else {
         // Ближней к пикселю будет точка с меньшим положительным параметром
         double t1 = (-B - sqrt(B * B - 4 * A * C)) / (2 * A);
         double t2 = (-B + sqrt(B * B - 4 * A * C)) / (2 * A);
 
         if (t1 > 0) {
-            return Optional<Point>((Vector(ray.start) + t1 * ray.direction).getEnd());
+            return Optional<double>(t1);
+        } else if (t2 > 0) {
+            return Optional<double>(t2);
         } else {
-            return Optional<Point>();
+            return Optional<double>();
         }
     }
 }
 
-ColorRGB Sphere::getColor() const {
-    return color;
-}
 #endif
-

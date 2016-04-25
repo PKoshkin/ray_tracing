@@ -10,8 +10,8 @@ class Figure {
 public:
     virtual Vector normal(const Point& point) const = 0;
     virtual bool touchesPoint(const Point& point) const = 0;
-    virtual Optional<Point> intersectionWithRay(const Ray& ray) const = 0;
     virtual ColorRGB getColor() const = 0;
+    virtual Optional<double> getT(const Ray& ray) const = 0; // Возвращает наименьший положительный параметр, если он есть
 };
 
 #endif

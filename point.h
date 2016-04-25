@@ -41,4 +41,12 @@ double Point::getZ() const {
     return z;
 }
 
+double distance(const Point& point1, const Point& point2) {
+    return sqrt(
+            (point1.getX() - point2.getX()) * (point1.getX() - point2.getX()) +
+            (point1.getY() - point2.getY()) * (point1.getY() - point2.getY()) +
+            (point1.getZ() - point2.getZ()) * (point1.getZ() - point2.getZ())
+    );
+}
+
 #endif

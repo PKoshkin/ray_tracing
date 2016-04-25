@@ -30,26 +30,22 @@ private:
     Vector axisY;
 
     std::vector< std::vector<Pixel> > pixels;
-    std::vector< std::unique_ptr<Figure> > figures;
+    std::vector< std::shared_ptr<Figure> > figures;
     std::vector< std::unique_ptr<Lighter> > lighters;
 
 public:
     Scene(int inWidth, int inHeight, double inDistanceToScreen, Point inCamera, Vector inDirection, Vector inAxisX, Vector inAxisY);
-    void setColor(int x, int y, const ColorRGB& color);
     void addFigure(std::unique_ptr<Figure> figure);
-    void addLighter(const Point& point);
+    void addLighter(const Lighter& inLighter);
     Vector vectorToPixel(const Pixel& pixel) const;
     ColorRGB runRay(const Pixel& pixel) const;
     void process();
-    bool reaches(const Point& begin, const Point& end) const;
-    void draw() const;
+    void save(const char* file) const;
+    void antialiase();
 };
 
 Scene::Scene(int inWidth, int inHeight, double inDistanceToScreen, Point inCamera, Vector inDirection, Vector inAxisX, Vector inAxisY) :
-    height(inHeight), width(inWidth), distanceToScreen(inDistanceToScreen), camera(inCamera), direction(inDirection), axisX(inAxisX), axisY(inAxisY) {
-    direction.normalize();
-    axisX.normalize();
-    axisY.normalize();
+    height(inHeight), width(inWidth), distanceToScreen(inDistanceToScreen), camera(inCamera), direction(inDirection.normalized()), axisX(inAxisX.normalized()), axisY(inAxisY.normalized()) {
 
     pixels.reserve(width);
     for (int i = 0; i < width; ++i) {
@@ -62,15 +58,11 @@ Scene::Scene(int inWidth, int inHeight, double inDistanceToScreen, Point inCamer
 }
 
 void Scene::addFigure(std::unique_ptr<Figure> figure) {
-    figures.push_back(std::move(figure));
+    figures.emplace_back(std::move(figure));
 }
 
-void Scene::addLighter(const Point& point) {
-    lighters.emplace_back(new Lighter(point));
-}
-
-void Scene::setColor(int x, int y, const ColorRGB& color) {
-    pixels[x][y].setColor(color);
+void Scene::addLighter(const Lighter& inLighter) {
+    lighters.emplace_back(new Lighter(inLighter));
 }
 
 Vector Scene::vectorToPixel(const Pixel& pixel) const {
@@ -78,27 +70,23 @@ Vector Scene::vectorToPixel(const Pixel& pixel) const {
 }
 
 ColorRGB Scene::runRay(const Pixel& pixel) const {
-    Vector rayDirection = vectorToPixel(pixel);
-    Point pixelPoint = rayDirection.getEnd();
-    rayDirection.normalize();
+    Ray ray(vectorToPixel(pixel).getEnd(), vectorToPixel(pixel));
 
-    Point closestIntersection;
-    ColorRGB color;
+    std::shared_ptr<Figure> intersectingFigurePointer;
+    double t; // Параметр луча, отвечающий точке пересечения
     bool foundIntersections = false;
     for (auto it = figures.begin(); it != figures.end(); ++it) {
-        Optional<Point> intersection = (*it)->intersectionWithRay(pixelPoint, rayDirection);
-        if (intersection.hasValue()) {
+        Optional<double> tempT = (*it)->getT(ray);
+        if (tempT.hasValue()) {
             if (!foundIntersections) {
-                closestIntersection = intersection.getValue();
-                color = (*it)->getColor();
-                color.normalize(fabs(scalarProduct(rayDirection, (*it)->normal(closestIntersection))));
+                intersectingFigurePointer = *it;
+                t = tempT.getValue();
                 foundIntersections = true;
                 continue;
             } else {
-                if ((distance(pixelPoint, closestIntersection) > distance(pixelPoint, intersection.getValue()))) {
-                    closestIntersection = intersection.getValue();
-                    color = (*it)->getColor();
-                    color.normalize(fabs(scalarProduct(rayDirection, (*it)->normal(closestIntersection))));
+                if (tempT.getValue() < t) {
+                    intersectingFigurePointer = *it;
+                    t = tempT.getValue();
                 }
             }
         }
@@ -106,31 +94,33 @@ ColorRGB Scene::runRay(const Pixel& pixel) const {
     if (foundIntersections) {
         double intensity = 0;
         for (auto it = lighters.begin(); it != lighters.end(); ++it) {
-/*
-            for (auto jt = lighters.begin(); jt != lighters.end(); ++jt) {
-                if ((*it)->lightesToPoint()) {
-                    
+
+            Ray lightRay(ray.getPoint(t), (*it)->getPlace());
+            bool shines = true;
+            for (auto jt = figures.begin(); jt != figures.end(); ++jt) {
+                if ((*jt) == intersectingFigurePointer) {
+                    continue;
+                }
+                Optional<double> currentT = (*jt)->getT(lightRay);
+                if (currentT.hasValue()) {
+                    if (currentT.getValue() < lightRay.getPointT((*it)->getPlace())) {
+                        shines = false;
+                        break;
+                    }
                 }
             }
-*/
-            intensity += (*it)->intensity(closestIntersection);
+            if (shines) {
+                double k = fabs(scalarProduct(intersectingFigurePointer->normal(lightRay.start), lightRay.direction));
+                intensity += (*it)->intensity(ray.getPoint(t)) * k;
+            }
         }
 
-        return color;
+        return intersectingFigurePointer->getColor().normalized(intensity);
     } else {
         return ColorRGB();
     }
 }
 
-/*
-bool Scene::reaches(const Point& begin, const Point& end) const {
-    Vector direction = (Vector(end) - Vector(begin)).normalized();
-    for (auto it = lighters.begin(); it != lighters.end(); ++it) {
-
-    }
-}
-*/
-    
 void Scene::process() {
     for (int x = 0; x < width; ++x) {
         std::cout << x << std::endl;
@@ -140,7 +130,51 @@ void Scene::process() {
     }
 }
 
-void Scene::draw() const {
+void Scene::antialiase() {
+    std::vector< std::vector<Pixel> > oldPixels;
+    oldPixels.reserve(width);
+    for (int i = 0; i < pixels.size(); ++i) {
+        oldPixels.push_back(std::vector<Pixel>());
+        oldPixels[i].reserve(height);
+        for (int j = 0; j < pixels[i].size(); ++j) {
+            oldPixels[i].push_back(pixels[i][j]);
+        }
+    }
+
+    for (int i = 0; i < pixels.size(); ++i) {
+        for (int j = 0; j < pixels[i].size(); ++j) {
+            std::vector<ColorRGB> mixingColors;
+            mixingColors.push_back(oldPixels[i][j].getColor());
+            if ((i > 0) && (j > 0)) {
+                mixingColors.push_back(oldPixels[i - 1][j - 1].getColor());
+            }
+            if (i > 0) {
+                mixingColors.push_back(oldPixels[i - 1][j].getColor());
+            }
+            if ((i > 0) && (j < pixels.size() - 1)) {
+                mixingColors.push_back(oldPixels[i - 1][j + 1].getColor());
+            }
+            if (j > 0) {
+                mixingColors.push_back(oldPixels[i][j - 1].getColor());
+            }
+            if (j < pixels.size() - 1) {
+                mixingColors.push_back(oldPixels[i][j + 1].getColor());
+            }
+            if ((j > 0) && (i < pixels.size() - 1)) {
+                mixingColors.push_back(oldPixels[i + 1][j - 1].getColor());
+            }
+            if (i < pixels.size() - 1) {
+                mixingColors.push_back(oldPixels[i + 1][j].getColor());
+            }
+            if ((i < pixels.size() - 1) && (j < pixels.size() - 1)) {
+                mixingColors.push_back(oldPixels[i + 1][j + 1].getColor());
+            }
+            pixels[i][j].setColor(ColorRGB(mixingColors));
+        }
+    }
+}
+
+void Scene::save(const char* file) const {
     cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(surface);
     for (int i = 0; i < pixels.size(); ++i) {
@@ -151,7 +185,7 @@ void Scene::draw() const {
         }
     }
 
-    cairo_surface_write_to_png(surface, "out.png");
+    cairo_surface_write_to_png(surface, file);
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
 }

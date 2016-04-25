@@ -3,7 +3,7 @@
 
 #include <math.h>
 
-#include "color.h"
+#include "color_rgb.h"
 
 class Pixel {
 private:
@@ -17,6 +17,7 @@ public:
     void setColor(const ColorRGB& inColor);
     int getX() const;
     int getY() const;
+    ColorRGB getColor() const;
     double getRed() const;
     double getGreen() const;
     double getBlue() const;
@@ -38,6 +39,10 @@ int Pixel::getY() const {
     return y;
 }
 
+ColorRGB Pixel::getColor() const {
+    return color;
+}
+
 double Pixel::getRed() const {
     return color.getRed();
 }
@@ -48,14 +53,6 @@ double Pixel::getGreen() const {
 
 double Pixel::getBlue() const {
     return color.getBlue();
-}
-
-double distance(const Point& point1, const Point& point2) {
-    return sqrt(
-            (point1.getX() - point2.getX()) * (point1.getX() - point2.getX()) +
-            (point1.getY() - point2.getY()) * (point1.getY() - point2.getY()) +
-            (point1.getZ() - point2.getZ()) * (point1.getZ() - point2.getZ())
-    );
 }
 
 #endif
