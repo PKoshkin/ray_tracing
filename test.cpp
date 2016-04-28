@@ -20,12 +20,14 @@ int main() {
 
     std::unique_ptr<Triangle> tr(new Triangle(Point(-900, 2000, -900), Point(900, 2300, -900), Point(900, 2000, 900), ColorRGB(0, 1, 0)));
     std::unique_ptr<Triangle> tr1(new Triangle(Point(-900, 2000, -900), Point(-900, 2300, 900), Point(900, 2000, 900), ColorRGB(1, 1, 0)));
+    std::unique_ptr<Triangle> tr2(new Triangle(Point(0, 1200, 0), Point(600, 1200, 0), Point(0, 1200, 600), ColorRGB(1, 0, 0)));
     std::unique_ptr<Sphere> sp(new Sphere(Point(300, 1500, 0), 100, ColorRGB(1, 0, 0)));
     std::unique_ptr<Sphere> sp1(new Sphere(Point(0, 1500, 300), 100, ColorRGB(0, 1, 0)));
     std::unique_ptr<Sphere> sp2(new Sphere(Point(300, 1500, 300), 100, ColorRGB(0, 0, 1)));
 
     scene.addFigure(std::move(tr));
     scene.addFigure(std::move(tr1));
+    //scene.addFigure(std::move(tr2));
     scene.addFigure(std::move(sp));
     scene.addFigure(std::move(sp1));
     scene.addFigure(std::move(sp2));

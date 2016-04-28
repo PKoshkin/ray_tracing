@@ -85,7 +85,11 @@ Optional<double> Triangle::getT(const Ray& ray) const {
         return Optional<double>();
     }
     double t = scalarProduct(edge2, Q) * inv_det;
-    return Optional<double>(t);
+    if (t > 0) {
+        return Optional<double>(t);
+    } else {
+        return Optional<double>();
+    }
 }
 
 #endif

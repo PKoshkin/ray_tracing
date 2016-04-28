@@ -13,12 +13,12 @@ struct Node {
     int axis; // 0 - x, 1 - y, 2 - z
     double coordinate;
 
-    std::shared_ptr< std::vector< std::unique_ptr<Figure> > > figures;
+    std::vector< std::shared_ptr<Figure> > figures;
 
+    Node(int inAxis, double inCoordinate);
 
-    Node(int inAxis, double inCoordinate, std::shared_ptr< std::vector< std::unique_ptr<Figure> > > inFigures);
-
-    bool isSheet();
+    // Является ли вершина листом. Если вершина не лист, примитивы складывать в неё не будем.
+    bool isLeaf();
 };
 
 Node::Node(int inAxis, double inCoordinate, std::shared_ptr< std::vector< std::unique_ptr<Figure> > > inFigures) : axis(inAxis), coordinate(inCoordinate) {
@@ -26,7 +26,7 @@ Node::Node(int inAxis, double inCoordinate, std::shared_ptr< std::vector< std::u
 }
 
 bool Node::isSheet() {
-    return bool(figures);
+    return !figures.empty();
 }
 
 class Tree3D {
