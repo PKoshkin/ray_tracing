@@ -48,10 +48,10 @@ Scene::Scene(int inWidth, int inHeight, double inDistanceToScreen, Point inCamer
     height(inHeight), width(inWidth), distanceToScreen(inDistanceToScreen), camera(inCamera), direction(inDirection.normalized()), axisX(inAxisX.normalized()), axisY(inAxisY.normalized()) {
 
     pixels.reserve(width);
-    for (int i = 0; i < width; ++i) {
+    for (size_t i = 0; i < width; ++i) {
         pixels.push_back(std::vector<Pixel>());
         pixels[i].reserve(height);
-        for (int j = 0; j < height; ++j) {
+        for (size_t j = 0; j < height; ++j) {
             pixels[i].push_back(Pixel(i, j));
         }
     }
@@ -122,9 +122,9 @@ ColorRGB Scene::runRay(const Pixel& pixel) const {
 }
 
 void Scene::process() {
-    for (int x = 0; x < width; ++x) {
+    for (size_t x = 0; x < width; ++x) {
         std::cout << x << std::endl;
-        for (int y = 0; y < height; ++y) {
+        for (size_t y = 0; y < height; ++y) {
             pixels[x][y].setColor(runRay(pixels[x][y]));
         }
     }
@@ -133,16 +133,16 @@ void Scene::process() {
 void Scene::antialiase() {
     std::vector< std::vector<Pixel> > oldPixels;
     oldPixels.reserve(width);
-    for (int i = 0; i < pixels.size(); ++i) {
+    for (size_t i = 0; i < pixels.size(); ++i) {
         oldPixels.push_back(std::vector<Pixel>());
         oldPixels[i].reserve(height);
-        for (int j = 0; j < pixels[i].size(); ++j) {
+        for (size_t j = 0; j < pixels[i].size(); ++j) {
             oldPixels[i].push_back(pixels[i][j]);
         }
     }
 
-    for (int i = 0; i < pixels.size(); ++i) {
-        for (int j = 0; j < pixels[i].size(); ++j) {
+    for (size_t i = 0; i < pixels.size(); ++i) {
+        for (size_t j = 0; j < pixels[i].size(); ++j) {
             std::vector<ColorRGB> mixingColors;
             mixingColors.push_back(oldPixels[i][j].getColor());
             if ((i > 0) && (j > 0)) {
@@ -177,7 +177,7 @@ void Scene::antialiase() {
 void Scene::save(const char* file) const {
     cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(surface);
-    for (int i = 0; i < pixels.size(); ++i) {
+    for (size_t i = 0; i < pixels.size(); ++i) {
         for (int j = 0; j < pixels[i].size(); ++j) {
             cairo_set_source_rgb(cr, pixels[i][j].getRed(), pixels[i][j].getGreen(), pixels[i][j].getBlue());
             cairo_rectangle(cr, pixels[i][j].getX(), pixels[i][j].getY(), 1, 1);

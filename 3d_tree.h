@@ -15,17 +15,22 @@ struct Node {
 
     std::vector< std::shared_ptr<Figure> > figures;
 
-    Node(int inAxis, double inCoordinate);
+    Node(int inAxis, double inCoordinate, const std::vector< std::shared_ptr<Figure> >& figures);
+    void split();
 
     // Является ли вершина листом. Если вершина не лист, примитивы складывать в неё не будем.
-    bool isLeaf();
+    bool isLeaf() const;
 };
 
-Node::Node(int inAxis, double inCoordinate, std::shared_ptr< std::vector< std::unique_ptr<Figure> > > inFigures) : axis(inAxis), coordinate(inCoordinate) {
+Node::Node(int inAxis, double inCoordinate, const std::vector< std::shared_ptr<Figure> >& inFigures) :
+    axis(inAxis), coordinate(inCoordinate), figures(inFigures) {}
+
+void Node::split(int splitCoordinate) {
+    std::vector
 
 }
 
-bool Node::isSheet() {
+bool Node::isLeaf() const {
     return !figures.empty();
 }
 
@@ -34,16 +39,12 @@ private:
     std::unique_ptr<Node> root;
 
 public:
-    Tree3D(std::shared_ptr< std::vector< std::unique_ptr<Figure> > > inFigures); 
+    Tree3D(const std::vector< std::shared_ptr<Figure> >& inFigures); 
 };
 
-Tree3D::Tree3D(std::shared_ptr< std::vector< std::unique_ptr<Figure> > > inFigures) { 
+Tree3D::Tree3D(const std::vector< std::shared_ptr<Figure> >& inFigures) { 
     root = std::unique_ptr<Node>(new Node(0, 0, inFigures));
-/*
-    for (auto it = figures.begin(); it != figures.end(); ++it) {
-        
-    }
-*/
+    root->split();
 }
 
 #endif

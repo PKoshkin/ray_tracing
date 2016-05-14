@@ -1,6 +1,8 @@
 #ifndef POINT_KOSHKIN_493 
 #define POINT_KOSHKIN_493
 
+#include "math.h"
+
 class Point {
 private:
     double x;

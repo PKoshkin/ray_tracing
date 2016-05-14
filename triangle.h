@@ -2,12 +2,15 @@
 #define TRIANGLE_KOSHKIN_493
 
 #include <vector>
+#include <algorithm>
 
 #include "figure.h"
 #include "vector.h"
 #include "point.h"
 #include "optional.h"
 #include "plane.h"
+#include "bounding_box.h"
+#include "constants.h"
 
 class Triangle : public virtual Figure {
 private:
@@ -26,6 +29,7 @@ public:
     virtual bool touchesPoint(const Point& point) const;
     virtual ColorRGB getColor() const;
     virtual Optional<double> getT(const Ray& ray) const;
+    virtual BoundingBox boundingBox() const;
 };
 
 Triangle::Triangle(const Point& point1, const Point& point2, const Point& point3, const ColorRGB& inColor) : color(inColor) {
@@ -36,7 +40,7 @@ Triangle::Triangle(const Point& point1, const Point& point2, const Point& point3
 }
 
 Triangle::Triangle(const Triangle& triangle) {
-    for (int i = 0; i < points.size(); ++i) {
+    for (size_t i = 0; i < points.size(); ++i) {
         points[i] = triangle.points[i];
     }
     color = triangle.color;
@@ -90,6 +94,16 @@ Optional<double> Triangle::getT(const Ray& ray) const {
     } else {
         return Optional<double>();
     }
+}
+
+BoundingBox Triangle::boundingBox() const {
+    double minX = std::min(points[0].getX(), std::min(points[1].getX(), points[2].getX()));
+    double minY = std::min(points[0].getY(), std::min(points[1].getY(), points[2].getY()));
+    double minZ = std::min(points[0].getZ(), std::min(points[1].getZ(), points[2].getZ()));
+    double maxX = std::max(points[0].getX(), std::max(points[1].getX(), points[2].getX()));
+    double maxY = std::max(points[0].getY(), std::max(points[1].getY(), points[2].getY()));
+    double maxZ = std::max(points[0].getZ(), std::max(points[1].getZ(), points[2].getZ()));
+    return BoundingBox(Point(minX, minY, minZ), Point(maxX, maxY, maxZ));
 }
 
 #endif

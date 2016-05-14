@@ -25,11 +25,12 @@ public:
     virtual bool touchesPoint(const Point& point) const;
     virtual ColorRGB getColor() const;
     virtual Optional<double> getT(const Ray& ray) const;
+    virtual BoundingBox boundingBox() const;
 };
 
-Sphere::Sphere(const Point& inCenter, double inRadius, const ColorRGB& inColor) : center(inCenter), radius(inRadius), color(inColor) {}
+Sphere::Sphere(const Point& inCenter, double inRadius, const ColorRGB& inColor) : radius(inRadius), center(inCenter), color(inColor) {}
 
-Sphere::Sphere(const Sphere& sphere) : center(sphere.center), radius(sphere.radius), color(sphere.color) {}
+Sphere::Sphere(const Sphere& sphere) : radius(sphere.radius), center(sphere.center), color(sphere.color) {}
 
 Vector Sphere::normal(const Point& point) const {
     return (Vector(point) - Vector(center)).normalized();
@@ -63,6 +64,13 @@ Optional<double> Sphere::getT(const Ray& ray) const {
             return Optional<double>();
         }
     }
+}
+
+BoundingBox Sphere::boundingBox() const {
+    return BoundingBox(
+        Point(center.getX() - radius, center.getY() - radius, center.getZ() - radius),
+        Point(center.getX() + radius, center.getY() + radius, center.getZ() + radius)
+    );
 }
 
 #endif
