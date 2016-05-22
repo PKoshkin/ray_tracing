@@ -13,6 +13,7 @@
 #include "color.h"
 #include "constants.h"
 #include "lighter.h"
+#include "ray.h"
 
 class Scene {
 private:
@@ -31,11 +32,12 @@ private:
 
     std::vector< std::vector<Pixel> > pixels;
     std::vector< std::shared_ptr<Figure> > figures;
-    std::vector< std::unique_ptr<Lighter> > lighters;
+    std::vector<Lighter> lighters;
 
 public:
+    Scene() {}
     Scene(int inWidth, int inHeight, double inDistanceToScreen, Point inCamera, Vector inDirection, Vector inAxisX, Vector inAxisY);
-    void addFigure(std::unique_ptr<Figure> figure);
+    void addFigure(std::shared_ptr<Figure> figure);
     void addLighter(const Lighter& inLighter);
     Vector vectorToPixel(const Pixel& pixel) const;
     ColorRGB runRay(const Pixel& pixel) const;
@@ -57,12 +59,12 @@ Scene::Scene(int inWidth, int inHeight, double inDistanceToScreen, Point inCamer
     }
 }
 
-void Scene::addFigure(std::unique_ptr<Figure> figure) {
+void Scene::addFigure(std::shared_ptr<Figure> figure) {
     figures.emplace_back(std::move(figure));
 }
 
 void Scene::addLighter(const Lighter& inLighter) {
-    lighters.emplace_back(new Lighter(inLighter));
+    lighters.push_back(inLighter);
 }
 
 Vector Scene::vectorToPixel(const Pixel& pixel) const {
@@ -72,6 +74,7 @@ Vector Scene::vectorToPixel(const Pixel& pixel) const {
 ColorRGB Scene::runRay(const Pixel& pixel) const {
     Ray ray(vectorToPixel(pixel).getEnd(), vectorToPixel(pixel));
 
+    // Ищем фигуру, с которой пересекается луч
     std::shared_ptr<Figure> intersectingFigurePointer;
     double t; // Параметр луча, отвечающий точке пересечения
     bool foundIntersections = false;
@@ -95,7 +98,7 @@ ColorRGB Scene::runRay(const Pixel& pixel) const {
         double intensity = 0;
         for (auto it = lighters.begin(); it != lighters.end(); ++it) {
 
-            Ray lightRay(ray.getPoint(t), (*it)->getPlace());
+            Ray lightRay(ray.getPoint(t), it->getPlace());
             bool shines = true;
             for (auto jt = figures.begin(); jt != figures.end(); ++jt) {
                 if ((*jt) == intersectingFigurePointer) {
@@ -103,7 +106,7 @@ ColorRGB Scene::runRay(const Pixel& pixel) const {
                 }
                 Optional<double> currentT = (*jt)->getT(lightRay);
                 if (currentT.hasValue()) {
-                    if (currentT.getValue() < lightRay.getPointT((*it)->getPlace())) {
+                    if (currentT.getValue() < lightRay.getPointT(it->getPlace())) {
                         shines = false;
                         break;
                     }
@@ -111,10 +114,9 @@ ColorRGB Scene::runRay(const Pixel& pixel) const {
             }
             if (shines) {
                 double k = fabs(scalarProduct(intersectingFigurePointer->normal(lightRay.start), lightRay.direction));
-                intensity += (*it)->intensity(ray.getPoint(t)) * k;
+                intensity += it->intensity(ray.getPoint(t)) * k;
             }
         }
-
         return intersectingFigurePointer->getColor().normalized(intensity);
     } else {
         return ColorRGB();
@@ -123,7 +125,6 @@ ColorRGB Scene::runRay(const Pixel& pixel) const {
 
 void Scene::process() {
     for (size_t x = 0; x < width; ++x) {
-        std::cout << x << std::endl;
         for (size_t y = 0; y < height; ++y) {
             pixels[x][y].setColor(runRay(pixels[x][y]));
         }

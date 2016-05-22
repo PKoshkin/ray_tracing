@@ -18,14 +18,17 @@ private:
     ColorRGB color;
 
 public:
-    Sphere(const Point& inCenter, double radius, const ColorRGB& inColor);
+    Sphere(const Point& inCenter, double radius, const ColorRGB& inColor = ColorRGB());
     Sphere(const Sphere& sphere);
 
     virtual Vector normal(const Point& point) const;
     virtual bool touchesPoint(const Point& point) const;
+    virtual void setColor(const ColorRGB& inColor);
     virtual ColorRGB getColor() const;
     virtual Optional<double> getT(const Ray& ray) const;
     virtual BoundingBox boundingBox() const;
+
+    virtual void show() const;
 };
 
 Sphere::Sphere(const Point& inCenter, double inRadius, const ColorRGB& inColor) : radius(inRadius), center(inCenter), color(inColor) {}
@@ -38,6 +41,10 @@ Vector Sphere::normal(const Point& point) const {
 
 bool Sphere::touchesPoint(const Point& point) const {
     return fabs(distance(point, center) - radius) < EPSILON;
+}
+
+void Sphere::setColor(const ColorRGB& inColor) {
+    color = inColor;
 }
 
 ColorRGB Sphere::getColor() const {
@@ -71,6 +78,10 @@ BoundingBox Sphere::boundingBox() const {
         Point(center.getX() - radius, center.getY() - radius, center.getZ() - radius),
         Point(center.getX() + radius, center.getY() + radius, center.getZ() + radius)
     );
+}
+
+void Sphere::show() const {
+    std::cout << center << " " << radius << " {" << color << "}" << std::endl;
 }
 
 #endif

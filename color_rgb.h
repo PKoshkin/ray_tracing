@@ -15,6 +15,9 @@ public:
     ColorRGB(const ColorRGB& color);
     ColorRGB(const std::vector<ColorRGB>& colors); // Микс цветов
 
+    friend std::istream& operator>>(std::istream& in, ColorRGB& color);
+    friend std::ostream& operator<<(std::ostream& out, const ColorRGB& color);
+
     double getRed() const;
     double getGreen() const;
     double getBlue() const;
@@ -69,6 +72,22 @@ void ColorRGB::set(double inRed, double inGreen, double inBlue) {
     red = inRed;
     green = inGreen;
     blue = inBlue;
+}
+
+std::istream& operator>>(std::istream& in, ColorRGB& color) {
+    int intRed, intGreen, intBlue;
+    in >> intRed >> intGreen >> intBlue;
+
+    color.red = intRed / 255;
+    color.green = intGreen / 255;
+    color.blue = intBlue / 255;
+
+    return in;
+}
+
+std::ostream& operator<<(std::ostream& out, const ColorRGB& color) {
+    out << color.red << " " << color.green << " " << color.blue; 
+    return out;
 }
 
 #endif

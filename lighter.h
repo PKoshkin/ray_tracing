@@ -8,12 +8,15 @@ class Lighter {
 private:
     Point place;
     double power;
-public:
 
+public:
     Lighter(const Lighter& lighter);
     Lighter(const Point& point, double inPower = INTENSITY_CONSTANT);
     double intensity(const Point& point) const;
     Point getPlace() const;
+
+    double getPower() const;
+    void setPower(double inConstant);
 };
 
 Lighter::Lighter(const Lighter& lighter) : place(lighter.place), power(lighter.power) {}
@@ -27,5 +30,12 @@ Point Lighter::getPlace() const {
     return place;
 }
 
+double Lighter::getPower() const {
+    return power;
+}
+
+void Lighter::setPower(double inConstant) {
+    power = inConstant;
+}
 
 #endif

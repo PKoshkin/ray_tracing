@@ -1,6 +1,8 @@
 #ifndef POINT_KOSHKIN_493 
 #define POINT_KOSHKIN_493
 
+#include <fstream>
+
 #include "math.h"
 
 class Point {
@@ -15,6 +17,9 @@ public:
     Point(const Point& point);
 
     void operator=(const Point& point);
+    double operator[](const int index) const;
+    friend std::istream& operator>>(std::istream& in, Point& point);
+    friend std::ostream& operator<<(std::ostream& out, const Point& point);
 
     double getX() const;
     double getY() const;
@@ -29,6 +34,27 @@ void Point::operator=(const Point& point) {
     x = point.x;
     y = point.y;
     z = point.z;
+}
+
+double Point::operator[](const int index) const {
+    // (x, y, z) - занумерованы в таком порядке 
+    if (index == 0) {
+        return x;
+    } else if (index == 1) {
+        return y;
+    } else if (index == 2) {
+        return z;
+    }
+}
+
+std::istream& operator>>(std::istream& in, Point& point) {
+    in >> point.x >> point.y >> point.z;
+    return in;
+}
+
+std::ostream& operator<<(std::ostream& out, const Point& point) {
+    out << "(" << point.x << ", " << point.y << ", " << point.z << ")";
+    return out;
 }
 
 double Point::getX() const {

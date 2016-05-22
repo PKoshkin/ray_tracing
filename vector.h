@@ -64,8 +64,7 @@ Vector operator*(double alpha, const Vector& vector) {
 }
 
 std::ostream& operator<<(std::ostream& out, const Vector& vector) {
-    out << "(" << vector.end.getX() << ", " << vector.end.getY() << ", " << vector.end.getZ() << ")";
-    return out;
+    return (out << vector.end);
 }
 
 Point Vector::getEnd() const {

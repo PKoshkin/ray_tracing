@@ -11,9 +11,12 @@ class Figure {
 public:
     virtual Vector normal(const Point& point) const = 0;
     virtual bool touchesPoint(const Point& point) const = 0;
+    virtual void setColor(const ColorRGB& inColor) = 0;
     virtual ColorRGB getColor() const = 0;
     virtual Optional<double> getT(const Ray& ray) const = 0; // Возвращает наименьший положительный параметр, если он есть
     virtual BoundingBox boundingBox() const = 0;
+
+    virtual void show() const = 0;
 };
 
 #endif

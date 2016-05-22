@@ -19,7 +19,7 @@ public:
     ColorRGB color;
 
 public:
-    Triangle(const Point& point1, const Point& point2, const Point& point3, const ColorRGB& inColor = ColorRGB());
+    Triangle(const Point& point1, const Point& point2, const Point& point3, const ColorRGB& inColor = ColorRGB(1, 0, 0));
     Triangle(const Triangle& triangle);
 
     double area() const;
@@ -27,9 +27,12 @@ public:
 
     virtual Vector normal(const Point& point) const;
     virtual bool touchesPoint(const Point& point) const;
+    virtual void setColor(const ColorRGB& inColor);
     virtual ColorRGB getColor() const;
     virtual Optional<double> getT(const Ray& ray) const;
     virtual BoundingBox boundingBox() const;
+
+    virtual void show() const;
 };
 
 Triangle::Triangle(const Point& point1, const Point& point2, const Point& point3, const ColorRGB& inColor) : color(inColor) {
@@ -60,6 +63,10 @@ Plane Triangle::getPlane() const {
 
 bool Triangle::touchesPoint(const Point& point) const {
     return (fabs(Triangle(points[0], points[1], point).area() + Triangle(points[1], points[2], point).area() + Triangle(points[2], points[0], point).area() - area()) < EPSILON);
+}
+
+void Triangle::setColor(const ColorRGB& inColor) {
+    color = inColor;
 }
 
 ColorRGB Triangle::getColor() const {
@@ -104,6 +111,10 @@ BoundingBox Triangle::boundingBox() const {
     double maxY = std::max(points[0].getY(), std::max(points[1].getY(), points[2].getY()));
     double maxZ = std::max(points[0].getZ(), std::max(points[1].getZ(), points[2].getZ()));
     return BoundingBox(Point(minX, minY, minZ), Point(maxX, maxY, maxZ));
+}
+
+void Triangle::show() const {
+    std::cout << points[0] << " " << points[1] << " " << points[2] << " {" << color << "}" << std::endl;
 }
 
 #endif
