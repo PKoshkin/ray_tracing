@@ -17,10 +17,11 @@
 
 class Scene {
 private:
-    
     // Разрешение экрана
-    int height;
-    int width;
+    double height;
+    double width;
+    int screenHeight;
+    int screenWidth;
 
     double distanceToScreen; // Расстояние от камеры до экрана
     Point camera; // Точка в которой стоит камера
@@ -36,28 +37,18 @@ private:
 
 public:
     Scene() {}
-    Scene(int inWidth, int inHeight, double inDistanceToScreen, Point inCamera, Vector inDirection, Vector inAxisX, Vector inAxisY);
+    Scene(double inWidth, double inHeight, double inDistanceToScreen, Point inCamera, Vector inDirection, Vector inAxisX, Vector inAxisY);
     void addFigure(std::shared_ptr<Figure> figure);
     void addLighter(const Lighter& inLighter);
-    Vector vectorToPixel(const Pixel& pixel) const;
+    Ray rayToPixel(const Pixel& pixel) const;
     ColorRGB runRay(const Pixel& pixel) const;
-    void process();
+    void process(int screenWidth, int screenHeight);
     void save(const char* file) const;
     void antialiase();
 };
 
-Scene::Scene(int inWidth, int inHeight, double inDistanceToScreen, Point inCamera, Vector inDirection, Vector inAxisX, Vector inAxisY) :
-    height(inHeight), width(inWidth), distanceToScreen(inDistanceToScreen), camera(inCamera), direction(inDirection.normalized()), axisX(inAxisX.normalized()), axisY(inAxisY.normalized()) {
-
-    pixels.reserve(width);
-    for (size_t i = 0; i < width; ++i) {
-        pixels.push_back(std::vector<Pixel>());
-        pixels[i].reserve(height);
-        for (size_t j = 0; j < height; ++j) {
-            pixels[i].push_back(Pixel(i, j));
-        }
-    }
-}
+Scene::Scene(double inWidth, double inHeight, double inDistanceToScreen, Point inCamera, Vector inDirection, Vector inAxisX, Vector inAxisY) :
+    height(inHeight), width(inWidth), distanceToScreen(inDistanceToScreen), camera(inCamera), direction(inDirection.normalized()), axisX(inAxisX.normalized()), axisY(inAxisY.normalized()) {}
 
 void Scene::addFigure(std::shared_ptr<Figure> figure) {
     figures.emplace_back(std::move(figure));
@@ -67,12 +58,15 @@ void Scene::addLighter(const Lighter& inLighter) {
     lighters.push_back(inLighter);
 }
 
-Vector Scene::vectorToPixel(const Pixel& pixel) const {
-    return Vector(camera) + direction * distanceToScreen + axisX * (pixel.getX() - width / 2) + axisY * (pixel.getY() - height / 2);
+Ray Scene::rayToPixel(const Pixel& pixel) const {
+    double xStep = width / pixels.size();
+    double yStep = height / pixels[0].size();
+    Vector directionVector = direction * distanceToScreen + axisX * (pixel.getX() * xStep - width / 2) + axisY * (pixel.getY() * yStep - height / 2);
+    return Ray((Vector(camera) + directionVector).getEnd(), directionVector);
 }
 
 ColorRGB Scene::runRay(const Pixel& pixel) const {
-    Ray ray(vectorToPixel(pixel).getEnd(), vectorToPixel(pixel));
+    Ray ray = rayToPixel(pixel); 
 
     // Ищем фигуру, с которой пересекается луч
     std::shared_ptr<Figure> intersectingFigurePointer;
@@ -123,9 +117,20 @@ ColorRGB Scene::runRay(const Pixel& pixel) const {
     }
 }
 
-void Scene::process() {
-    for (size_t x = 0; x < width; ++x) {
-        for (size_t y = 0; y < height; ++y) {
+void Scene::process(int screenWidth, int screenHeight) {
+    // Создаем экран нужного размера
+    pixels.reserve(screenWidth);
+    for (size_t i = 0; i < screenWidth; ++i) {
+        pixels.push_back(std::vector<Pixel>());
+        pixels[i].reserve(screenHeight);
+        for (size_t j = 0; j < screenHeight; ++j) {
+            pixels[i].push_back(Pixel(i, j));
+        }
+    }
+
+    // Считаем цвета пикселей
+    for (size_t x = 0; x < screenWidth; ++x) {
+        for (size_t y = 0; y < screenHeight; ++y) {
             pixels[x][y].setColor(runRay(pixels[x][y]));
         }
     }
@@ -133,10 +138,10 @@ void Scene::process() {
 
 void Scene::antialiase() {
     std::vector< std::vector<Pixel> > oldPixels;
-    oldPixels.reserve(width);
+    oldPixels.reserve(pixels.size());
     for (size_t i = 0; i < pixels.size(); ++i) {
         oldPixels.push_back(std::vector<Pixel>());
-        oldPixels[i].reserve(height);
+        oldPixels[i].reserve(pixels[0].size());
         for (size_t j = 0; j < pixels[i].size(); ++j) {
             oldPixels[i].push_back(pixels[i][j]);
         }
@@ -176,7 +181,7 @@ void Scene::antialiase() {
 }
 
 void Scene::save(const char* file) const {
-    cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, pixels.size(), pixels[0].size());
     cairo_t *cr = cairo_create(surface);
     for (size_t i = 0; i < pixels.size(); ++i) {
         for (int j = 0; j < pixels[i].size(); ++j) {

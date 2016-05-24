@@ -2,13 +2,14 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <cstdlib>
 
 #include "scene.h"
 #include "reader.h"
 #include "optional.h"
 
 int main(int argc, char** argv) {
-    if (argc < 2) {
+    if (argc < 4) {
         std::cout << "Not enough arguments!" << std::endl;
         return 0;
     }
@@ -20,7 +21,7 @@ int main(int argc, char** argv) {
         return 0;
     }
     Scene realScene = scene.getValue();
-    realScene.process();
+    realScene.process(std::atoi(argv[2]), std::atoi(argv[3]));
     realScene.save("not_antianalised.png");
 
     return 0;
