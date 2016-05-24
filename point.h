@@ -17,7 +17,7 @@ public:
     Point(const Point& point);
 
     void operator=(const Point& point);
-    double operator[](const int index) const;
+    double operator[](int index) const;
     friend std::istream& operator>>(std::istream& in, Point& point);
     friend std::ostream& operator<<(std::ostream& out, const Point& point);
 
@@ -36,7 +36,7 @@ void Point::operator=(const Point& point) {
     z = point.z;
 }
 
-double Point::operator[](const int index) const {
+double Point::operator[](int index) const {
     // (x, y, z) - занумерованы в таком порядке 
     if (index == 0) {
         return x;

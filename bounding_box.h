@@ -26,7 +26,10 @@ public:
     int mostLengthAxis() const;
     double mostLengthAxisMiddle() const;
 
+    std::pair<double, double> getIntersectionsWithRay(const Ray& ray);
+
     BoundingBox operator+(const BoundingBox& inBox) const;
+    BoundingBox operator=(const BoundingBox& inBox) const;
 };
 
 BoundingBox::BoundingBox() {}
@@ -81,11 +84,23 @@ double BoundingBox::mostLengthAxisMiddle() const {
     return maxPoint[mostLengthAxis()] - minPoint[mostLengthAxis()];
 }
 
+std::pair<double, double> BoundingBox::getIntersectionsWithRay(const Ray& ray) {
+    return std::make_pair(
+        std::min(ray.getXT(minPoint.getX()), std::min(ray.getYT(minPoint.getY()), ray.getXT(minPoint.getZ()))),
+        std::max(ray.getXT(maxPoint.getX()), std::max(ray.getYT(maxPoint.getY()), ray.getXT(maxPoint.getZ())))
+    );
+}
+
 BoundingBox BoundingBox::operator+(const BoundingBox& inBox) const {
     return BoundingBox(
         Point(std::min(getMinX(), inBox.getMinX()), std::min(getMinY(), inBox.getMinY()), std::min(getMinZ(), inBox.getMinZ())),
         Point(std::max(getMaxX(), inBox.getMaxX()), std::max(getMaxY(), inBox.getMaxY()), std::max(getMaxZ(), inBox.getMaxZ()))
     );
+}
+
+BoundingBox BoundingBox::operator=(const BoundingBox& inBox) const {
+    minPoint = inBox.minPoint;
+    maxPoint = inBox.maxPoint;
 }
 
 #endif

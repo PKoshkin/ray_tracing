@@ -26,7 +26,6 @@ public:
     Plane getPlane() const;
 
     virtual Vector normal(const Point& point) const;
-    virtual bool touchesPoint(const Point& point) const;
     virtual void setColor(const ColorRGB& inColor);
     virtual ColorRGB getColor() const;
     virtual Optional<double> getT(const Ray& ray) const;
@@ -59,10 +58,6 @@ double Triangle::area() const {
 
 Plane Triangle::getPlane() const {
     return Plane(points[0], points[1], points[2]); 
-}
-
-bool Triangle::touchesPoint(const Point& point) const {
-    return (fabs(Triangle(points[0], points[1], point).area() + Triangle(points[1], points[2], point).area() + Triangle(points[2], points[0], point).area() - area()) < EPSILON);
 }
 
 void Triangle::setColor(const ColorRGB& inColor) {

@@ -20,12 +20,9 @@ private:
     // Разрешение экрана
     double height;
     double width;
-    int screenHeight;
-    int screenWidth;
 
-    double distanceToScreen; // Расстояние от камеры до экрана
     Point camera; // Точка в которой стоит камера
-    Vector direction; // Направление камеры
+    Vector vectorToCenter; // Вектор от камеры до центра экрана
 
     // Базис в плоскости экрана
     Vector axisX;
@@ -37,7 +34,7 @@ private:
 
 public:
     Scene() {}
-    Scene(double inWidth, double inHeight, double inDistanceToScreen, Point inCamera, Vector inDirection, Vector inAxisX, Vector inAxisY);
+    Scene(double inWidth, double inHeight, Vector inVectorToCenter, Point inCamera, Vector inAxisX, Vector inAxisY);
     void addFigure(std::shared_ptr<Figure> figure);
     void addLighter(const Lighter& inLighter);
     Ray rayToPixel(const Pixel& pixel) const;
@@ -47,8 +44,8 @@ public:
     void antialiase();
 };
 
-Scene::Scene(double inWidth, double inHeight, double inDistanceToScreen, Point inCamera, Vector inDirection, Vector inAxisX, Vector inAxisY) :
-    height(inHeight), width(inWidth), distanceToScreen(inDistanceToScreen), camera(inCamera), direction(inDirection.normalized()), axisX(inAxisX.normalized()), axisY(inAxisY.normalized()) {}
+Scene::Scene(double inWidth, double inHeight, Vector inVectorToCenter, Point inCamera, Vector inAxisX, Vector inAxisY) :
+    height(inHeight), width(inWidth), vectorToCenter(inVectorToCenter), camera(inCamera), axisX(inAxisX.normalized()), axisY(inAxisY.normalized()) {}
 
 void Scene::addFigure(std::shared_ptr<Figure> figure) {
     figures.emplace_back(std::move(figure));
@@ -61,12 +58,12 @@ void Scene::addLighter(const Lighter& inLighter) {
 Ray Scene::rayToPixel(const Pixel& pixel) const {
     double xStep = width / pixels.size();
     double yStep = height / pixels[0].size();
-    Vector directionVector = direction * distanceToScreen + axisX * (pixel.getX() * xStep - width / 2) + axisY * (pixel.getY() * yStep - height / 2);
+    Vector directionVector = vectorToCenter + axisX * (pixel.getX() * xStep - width / 2) + axisY * (pixel.getY() * yStep - height / 2);
     return Ray((Vector(camera) + directionVector).getEnd(), directionVector);
 }
 
 ColorRGB Scene::runRay(const Pixel& pixel) const {
-    Ray ray = rayToPixel(pixel); 
+    Ray ray = rayToPixel(pixel);
 
     // Ищем фигуру, с которой пересекается луч
     std::shared_ptr<Figure> intersectingFigurePointer;

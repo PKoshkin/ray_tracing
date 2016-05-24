@@ -22,7 +22,6 @@ public:
     Sphere(const Sphere& sphere);
 
     virtual Vector normal(const Point& point) const;
-    virtual bool touchesPoint(const Point& point) const;
     virtual void setColor(const ColorRGB& inColor);
     virtual ColorRGB getColor() const;
     virtual Optional<double> getT(const Ray& ray) const;
@@ -37,10 +36,6 @@ Sphere::Sphere(const Sphere& sphere) : radius(sphere.radius), center(sphere.cent
 
 Vector Sphere::normal(const Point& point) const {
     return (Vector(point) - Vector(center)).normalized();
-}
-
-bool Sphere::touchesPoint(const Point& point) const {
-    return fabs(distance(point, center) - radius) < EPSILON;
 }
 
 void Sphere::setColor(const ColorRGB& inColor) {

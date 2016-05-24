@@ -22,8 +22,13 @@ public:
     Vector operator-(const Vector& vector) const;
     friend Vector operator*(const Vector& vector, double alpha);
     friend Vector operator*(double alpha, const Vector& vector);
+    friend Vector operator/(const Vector& vector, double alpha);
+    double operator[](int index) const;
 
     Point getEnd() const;
+    double getX() const;
+    double getY() const;
+    double getZ() const;
     double length() const;
     double squareLength() const;
     void normalize();
@@ -63,12 +68,33 @@ Vector operator*(double alpha, const Vector& vector) {
     return vector * alpha;
 }
 
+Vector operator/(const Vector& vector, double alpha) {
+    return vector * (1 / alpha);
+}
+
+double Vector::operator[](int index) const {
+    // (x, y, z) - занумерованы в таком порядке 
+    return end[index];
+}
+
 std::ostream& operator<<(std::ostream& out, const Vector& vector) {
     return (out << vector.end);
 }
 
 Point Vector::getEnd() const {
     return end;
+}
+
+double Vector::getX() const {
+    return end.getX();
+}
+
+double Vector::getY() const {
+    return end.getY();
+}
+
+double Vector::getZ() const {
+    return end.getZ();
 }
 
 double Vector::length() const {

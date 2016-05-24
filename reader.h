@@ -85,9 +85,8 @@ Optional<Scene> Reader::getScene() {
         Scene scene(
             width,
             height,
-            toCenter.length(),
-            sceneData.origin,
             toCenter,
+            sceneData.origin,
             xAxis,
             yAxis
         );
