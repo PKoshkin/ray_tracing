@@ -7,17 +7,24 @@
 #include "optional.h"
 #include "figure.h"
 #include "ray.h"
+#include "bounding_box.h"
+#include "intersection.h"
+
+
+#include <iostream>
+
 
 const int MAX_DEPTH = 10;
-const int MAX_FIGURES_IN_NODE = 5;
+const int MAX_FIGURES_IN_NODE = 1;
 
 struct Node {
     std::shared_ptr<Node> left;
     std::shared_ptr<Node> right;
-    BouningBox commonBox;
+    BoundingBox commonBox;
 
     int axis; // 0 - x, 1 - y, 2 - z
     double coordinate;
+    bool hasLeft, hasRight;
 
     std::vector< std::shared_ptr<Figure> > figures;
 
@@ -27,7 +34,7 @@ struct Node {
     Optional<Intersection> getIntersectionFromExactNode(const Ray& ray); // Ищет пересечение в конкретной вершине.
 };
 
-Node::Node(const std::vector< std::shared_ptr<Figure> >& inFigures) {
+Node::Node(const std::vector< std::shared_ptr<Figure> >& inFigures) : figures(inFigures), hasLeft(false), hasRight(false) {
     commonBox = (*figures.begin())->boundingBox();
     for (auto it = figures.begin() + 1; it != figures.end(); ++it) {
         commonBox = commonBox + (*it)->boundingBox();
@@ -37,7 +44,10 @@ Node::Node(const std::vector< std::shared_ptr<Figure> >& inFigures) {
 }
 
 void Node::split(int depth) {
-    if (figures.size() > MAX_FIGURES_IN_NODE) {
+
+    std::cout << "split figure of size=" << figures.size() << std::endl;
+
+    if (figures.size() < MAX_FIGURES_IN_NODE) {
         return;
     }
     std::vector< std::shared_ptr<Figure> > leftFigures, rightFigures;
@@ -53,27 +63,45 @@ void Node::split(int depth) {
             rightFigures.push_back(*it);
         }
     }
-    left = std::make_shared<Node>(leftFigures);
-    right = std::make_shared<Node>(rightFigures);
+
     figures.clear();
-    if (depth <= MAX_DEPTH) {
-        left->split(depth + 1);
-        right->split(depth + 1);
+    if (!leftFigures.empty()) {
+
+        std::cout << "    has left!" << std::endl;
+
+        left = std::make_shared<Node>(leftFigures);
+        hasLeft = true;
+        if (depth <= MAX_DEPTH) {
+            left->split(depth + 1);
+        } else {
+            std::cout << "new leaf!" << std::endl;
+        }
+    }
+    if (!rightFigures.empty()) {
+
+        std::cout << "    has right!" << std::endl;
+
+        right = std::make_shared<Node>(rightFigures);
+        hasRight = true;
+        if (depth <= MAX_DEPTH) {
+            right->split(depth + 1);
+        } else {
+            std::cout << "new leaf!" << std::endl;
+        }
     }
 }
 
 Optional<Intersection> Node::getIntersectionFromExactNode(const Ray& ray) {
     std::shared_ptr<Figure> intersectingFigurePointer;
     double t; // Параметр луча, отвечающий точке пересечения
-    bool foundIntersections = false;
+    bool foundIntersection = false;
     for (auto it = figures.begin(); it != figures.end(); ++it) {
         Optional<double> tempT = (*it)->getT(ray);
         if (tempT.hasValue()) {
-            if (!foundIntersections) {
+            if (!foundIntersection) {
                 intersectingFigurePointer = *it;
                 t = tempT.getValue();
-                foundIntersections = true;
-                continue;
+                foundIntersection = true;
             } else {
                 if (tempT.getValue() < t) {
                     intersectingFigurePointer = *it;
@@ -83,16 +111,16 @@ Optional<Intersection> Node::getIntersectionFromExactNode(const Ray& ray) {
         }
     }
     if (foundIntersection) {
-        return Optional<Intersection>(intersectingFigurePointer, t);
+        return Optional<Intersection>(Intersection(intersectingFigurePointer, t));
     } else {
         return Optional<Intersection>();
     }
 }
 
 Optional<Intersection> Node::getIntersection(const Ray& ray) {
-    if (!figures.empty()) {
+    if (!hasLeft && !hasRight) {
         // Дошли до листа, пора искать пересечения с фигурами
-        return getIntersectionFromThisNode(ray);
+        return getIntersectionFromExactNode(ray);
     }
     std::pair<double, double> boxT = commonBox.getIntersectionsWithRay(ray);
     double splitT = ray.getCoordinateT(coordinate, axis);
@@ -100,10 +128,19 @@ Optional<Intersection> Node::getIntersection(const Ray& ray) {
         // Пересечений у луча с боксом нет.
         return Optional<Intersection>();
     }
-    Optinal<Intersection> intersection = left->getIntersection(ray);
-    if (intersection.hasValue()) {
-        return intersection;
+    if (hasLeft) {
+        Optional<Intersection> intersection = left->getIntersection(ray);
+        if (intersection.hasValue()) {
+            return intersection;
+        } else {
+            if (hasRight) {
+                return right->getIntersection(ray);
+            } else {
+                return Optional<Intersection>();
+            }
+        }
     } else {
+        // Правый сын здесь точно есть
         return right->getIntersection(ray);
     }
 }
@@ -111,24 +148,18 @@ Optional<Intersection> Node::getIntersection(const Ray& ray) {
 class Tree3D {
 private:
     std::shared_ptr<Node> root;
-    BoundingBox commonBox;
 
 public:
     Tree3D(const std::vector< std::shared_ptr<Figure> >& inFigures);
     Optional<Intersection> getIntersection(const Ray& ray);
 };
 
-Tree3D::Tree3D(const std::vector< std::shared_ptr<Figure> >& inFigures) {
-    // Считаем общий ограничивающий прямоугольник и делим корень дерева
-    root = std::make_shared<Node>(inFigures);
-    commonBox = (*inFigures.begin())->boundingBox();
-    for (auto it = inFigures.begin() + 1; it != inFigures.end(); ++it) {
-        commonBox = commonBox + (*it)->boundingBox();
-    }
+Tree3D::Tree3D(const std::vector< std::shared_ptr<Figure> >& inFigures) : root(new Node(inFigures)) {
+    // Делим корень дерева
     root->split();
 }
 
-Optioanl<Intersection> Tree3D::getFugure(const Ray& ray) {
+Optional<Intersection> Tree3D::getIntersection(const Ray& ray) {
     return root->getIntersection(ray);
 }
 

@@ -29,7 +29,7 @@ public:
     std::pair<double, double> getIntersectionsWithRay(const Ray& ray);
 
     BoundingBox operator+(const BoundingBox& inBox) const;
-    BoundingBox operator=(const BoundingBox& inBox) const;
+    BoundingBox operator=(const BoundingBox& inBox);
 };
 
 BoundingBox::BoundingBox() {}
@@ -98,7 +98,7 @@ BoundingBox BoundingBox::operator+(const BoundingBox& inBox) const {
     );
 }
 
-BoundingBox BoundingBox::operator=(const BoundingBox& inBox) const {
+BoundingBox BoundingBox::operator=(const BoundingBox& inBox) {
     minPoint = inBox.minPoint;
     maxPoint = inBox.maxPoint;
 }

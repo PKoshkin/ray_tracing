@@ -17,6 +17,7 @@
 
 class Scene {
 private:
+public:
     // Разрешение экрана
     double height;
     double width;
