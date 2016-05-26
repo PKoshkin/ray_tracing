@@ -78,17 +78,19 @@ double Node::calculateSurfaceAreaHeuristic(double inCoordinate, int inAxis) {
             ++rightN;
         }
     }
-    double leftVolume = 1, rightVolume = 1;
-    for (int i = 0; i < 3; ++i) {
-        if (i != axis) {
-            leftVolume *= commonBox.maxPoint[i] - commonBox.minPoint[i];
-            rightVolume *= commonBox.maxPoint[i] - commonBox.minPoint[i];
+    double leftSides[3], rightSides[3];
+    for (int currentAxis = 0; currentAxis < 3; ++currentAxis) {
+        if (currentAxis != axis) {
+            rightSides[currentAxis] = commonBox.maxPoint[currentAxis] - commonBox.minPoint[currentAxis];
+            rightSides[currentAxis] = commonBox.maxPoint[currentAxis] - commonBox.minPoint[currentAxis];
         } else {
-            leftVolume *= fabs(inCoordinate - commonBox.minPoint[i]);
-            rightVolume *= fabs(commonBox.maxPoint[i] - inCoordinate);
+            leftSides[currentAxis] = fabs(inCoordinate - commonBox.minPoint[currentAxis]);
+            rightSides[currentAxis] = fabs(commonBox.maxPoint[currentAxis] - inCoordinate);
         }
     }
-    return leftVolume * leftN + rightVolume * rightN;
+    double leftArea = 2 * (leftSides[0] * leftSides[1] + leftSides[1] * leftSides[2] + leftSides[2] * leftSides[0]);
+    double rightArea = 2 * (rightSides[0] * rightSides[1] + rightSides[1] * rightSides[2] + rightSides[2] * rightSides[0]);
+    return leftArea * leftN + rightArea * rightN;
 }
 
 void Node::split(int depth) {
