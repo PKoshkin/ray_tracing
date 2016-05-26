@@ -185,13 +185,16 @@ Optional<Intersection> Node::getIntersection(const Ray& ray) const {
 //        std::cout << "stop" << std::endl;
         return getIntersectionFromExactNode(ray);
     }
-    std::pair<double, double> boxT = commonBox.getIntersectionsWithRay(ray);
+    Optional< std::pair<double, double> > boxT = commonBox.getIntersectionsWithRay(ray);
+    if (!boxT.hasValue()) {
+        return Optional<Intersection>();
+    }
     double splitT = ray.getCoordinateT(coordinate, axis);
 
 //    std::cout << boxT.first << " " << splitT << " " << boxT.second << std::endl;
     
 
-    if ((splitT < boxT.first) || (splitT > boxT.second)) {
+    if ((splitT < boxT.getValue().first) || (splitT > boxT.getValue().second)) {
         // Пересечений у луча с боксом нет.
 //        std::cout << "no intersection" << std::endl;
         return Optional<Intersection>();

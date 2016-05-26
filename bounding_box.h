@@ -5,6 +5,7 @@
 
 #include "point.h"
 #include "constants.h"
+#include "optional.h"
 
 class BoundingBox {
 private:
@@ -29,7 +30,7 @@ public:
     double mostLengthAxisMiddle() const;
     double volume();
 
-    std::pair<double, double> getIntersectionsWithRay(const Ray& ray) const;
+    Optional< std::pair<double, double> > getIntersectionsWithRay(const Ray& ray) const;
 
     BoundingBox operator+(const BoundingBox& inBox) const;
     BoundingBox& operator=(const BoundingBox& inBox);
@@ -94,14 +95,14 @@ double BoundingBox::volume() {
     return (getMaxX() - getMinX()) * (getMaxY() - getMinY()) * (getMaxZ() - getMinZ());
 }
 
-std::pair<double, double> BoundingBox::getIntersectionsWithRay(const Ray& ray) const {
+Optional< std::pair<double, double> > BoundingBox::getIntersectionsWithRay(const Ray& ray) const {
 /*
     return std::make_pair(
         std::min(ray.getXT(minPoint.getX()), std::min(ray.getYT(minPoint.getY()), ray.getZT(minPoint.getZ()))),
         std::max(ray.getXT(maxPoint.getX()), std::max(ray.getYT(maxPoint.getY()), ray.getZT(maxPoint.getZ())))
     );
 */
-    double tMin = std::numeric_limits<double>::min();
+    double tMin = -std::numeric_limits<double>::max();
     double tMax = std::numeric_limits<double>::max();
     for (size_t axis = 0; axis < 3; ++axis) {
         double inv = 1 / ray.direction[axis];
@@ -112,10 +113,10 @@ std::pair<double, double> BoundingBox::getIntersectionsWithRay(const Ray& ray) c
     }
 
     if (tMax + EPSILON < tMin) {
-        return std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::max());
+        return Optional< std::pair<double, double> >();
     }
 
-    return std::make_pair(tMin, tMax);
+    return Optional< std::pair<double, double> >(std::make_pair(tMin, tMax));
 }
 
 BoundingBox BoundingBox::operator+(const BoundingBox& inBox) const {
