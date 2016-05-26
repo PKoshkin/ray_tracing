@@ -78,10 +78,10 @@ double Node::calculateSurfaceAreaHeuristic(double inCoordinate, int inAxis) {
     size_t leftN = 0, rightN = 0;
     for (auto it = figures.begin(); it != figures.end(); ++it) {
         // Смотрим, в какакую часть разбиения попал каждый примитив и прибавляем единичку соответствующему счетчику
-        if (inCoordinate >= (*it)->boundingBox().getMinPoint()[inAxis]) {
+        if (inCoordinate >= (*it)->boundingBox().getMinPoint()[inAxis] - EPSILON) {
             ++leftN;
         }
-        if (inCoordinate <= (*it)->boundingBox().getMaxPoint()[inAxis]) {
+        if (inCoordinate <= (*it)->boundingBox().getMaxPoint()[inAxis] + EPSILON) {
             ++rightN;
         }
     }
@@ -123,11 +123,11 @@ void Node::split(int depth) {
 //    std::cout << "-------------------------------\n";
     for (auto it = figures.begin(); it != figures.end(); ++it) {
         // Смотрим, в какакую часть разбиения попал каждый примитив и добавляем его туда.
-        if (coordinate >= (*it)->boundingBox().getMinPoint()[axis]) {
+        if (coordinate >= (*it)->boundingBox().getMinPoint()[axis] - EPSILON) {
             std::cout << "    left" << std::endl;
             leftFigures.push_back(*it);
         }
-        if (coordinate <= (*it)->boundingBox().getMaxPoint()[axis]) {
+        if (coordinate <= (*it)->boundingBox().getMaxPoint()[axis] + EPSILON) {
             std::cout << "    right" << std::endl;
             rightFigures.push_back(*it);
         }
