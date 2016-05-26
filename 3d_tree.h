@@ -42,9 +42,6 @@ struct Node {
 };
 
 Node::Node(const std::vector< std::shared_ptr<Figure> >& inFigures) : figures(inFigures), hasLeft(false), hasRight(false) {
-
-    std::cout << "---------------------------------\n";
-
     commonBox = (*figures.begin())->boundingBox();
     for (auto it = figures.begin() + 1; it != figures.end(); ++it) {
         commonBox = commonBox + (*it)->boundingBox();
@@ -68,10 +65,6 @@ Node::Node(const std::vector< std::shared_ptr<Figure> >& inFigures) : figures(in
             }
         }
     }
-
-    std::cout << "SAH = " << surfaceAreaHeuristic << " coordinate: " << coordinate << " axis: " << axis << std::endl;
-    std::cout << "---------------------------------\n";
-
 }
 
 double Node::calculateSurfaceAreaHeuristic(double inCoordinate, int inAxis) {
@@ -94,47 +87,26 @@ double Node::calculateSurfaceAreaHeuristic(double inCoordinate, int inAxis) {
             leftVolume *= fabs(inCoordinate - commonBox.minPoint[i]);
             rightVolume *= fabs(commonBox.maxPoint[i] - inCoordinate);
         }
-
-
-        std::cout << "calculating volume: " << commonBox.maxPoint[i] - commonBox.minPoint[i] << " "
-            << commonBox.maxPoint[i] - commonBox.minPoint[i] << " " <<
-            inCoordinate - commonBox.minPoint[i] << " " <<
-            commonBox.maxPoint[i] - inCoordinate << std::endl;
-
-
-
     }
-
-    std::cout << leftVolume << " * " << leftN << " + " << rightVolume << " * " << rightN << " = " << "new SAH: " << leftVolume * leftN + rightVolume * rightN << std::endl;
-
     return leftVolume * leftN + rightVolume * rightN;
 }
 
 void Node::split(int depth) {
-
-//    std::cout << "split: coordinate: " << coordinate << " axis: " << axis << " " << commonBox.minPoint << " " << commonBox.maxPoint << std::endl;
-
     // Посчитаем SAH и проверим, надо ли было в вамом деле сплититься
     if (commonBox.volume() * figures.size() < surfaceAreaHeuristic) {
         return;
     }
     std::vector< std::shared_ptr<Figure> > leftFigures, rightFigures;
 
-//    std::cout << "-------------------------------\n";
     for (auto it = figures.begin(); it != figures.end(); ++it) {
         // Смотрим, в какакую часть разбиения попал каждый примитив и добавляем его туда.
         if (coordinate >= (*it)->boundingBox().getMinPoint()[axis] - EPSILON) {
-            std::cout << "    left" << std::endl;
             leftFigures.push_back(*it);
         }
         if (coordinate <= (*it)->boundingBox().getMaxPoint()[axis] + EPSILON) {
-            std::cout << "    right" << std::endl;
             rightFigures.push_back(*it);
         }
     }
-//    std::cout << "-------------------------------\n";
-
-//    std::cout << "    left size: " << leftFigures.size() << " right size: " << rightFigures.size() << std::endl;
 
     figures.clear();
     if (!leftFigures.empty()) {
@@ -182,7 +154,6 @@ Optional<Intersection> Node::getIntersectionFromExactNode(const Ray& ray) const 
 Optional<Intersection> Node::getIntersection(const Ray& ray) const {
     if (!hasLeft && !hasRight) {
         // Дошли до листа, пора искать пересечения с фигурами
-//        std::cout << "stop" << std::endl;
         return getIntersectionFromExactNode(ray);
     }
     Optional< std::pair<double, double> > boxT = commonBox.getIntersectionsWithRay(ray);
@@ -191,51 +162,48 @@ Optional<Intersection> Node::getIntersection(const Ray& ray) const {
     }
     double splitT = ray.getCoordinateT(coordinate, axis);
 
-//    std::cout << boxT.first << " " << splitT << " " << boxT.second << std::endl;
-    
-
-    if ((splitT < boxT.getValue().first) || (splitT > boxT.getValue().second)) {
-        // Пересечений у луча с боксом нет.
-//        std::cout << "no intersection" << std::endl;
-        return Optional<Intersection>();
-    }
-
     // Сначала пойдем в ребенка, в котором лежит начало луча
     std::shared_ptr<Node> first, second;
     bool hasFirst, hasSecond;
     if (ray.start[axis] < coordinate) {
-
-//        std::cout << "fisrt - left" << std::endl;
-
         first = left;
         second = right;
         hasFirst = hasLeft;
         hasSecond = hasRight;
     } else {
-
-//        std::cout << "fisrt - right" << std::endl;
-
         first = right;
         second = left;
         hasFirst = hasRight;
         hasSecond = hasLeft;
     }
+
+    if (splitT <= boxT.getValue().first) {
+        if (hasSecond) {
+            return second->getIntersection(ray);
+        } else {
+            return Optional<Intersection>();
+        }
+    }
+    if (splitT >= boxT.getValue().first) {
+        if (hasFirst) {
+            return first->getIntersection(ray);
+        } else {
+            return Optional<Intersection>();
+        }
+    }
+
     if (hasFirst) {
         Optional<Intersection> intersection = first->getIntersection(ray);
         if (intersection.hasValue()) {
-//            std::cout << "-> first";
             return intersection;
         } else {
             if (hasSecond) {
-//                std::cout << "-> second";
                 return second->getIntersection(ray);
             } else {
-//                std::cout << "-> nothing";
                 return Optional<Intersection>();
             }
         }
     } else {
-//        std::cout << "-> second (no first)";
         // Правый сын здесь точно есть
         return second->getIntersection(ray);
     }

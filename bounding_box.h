@@ -96,12 +96,6 @@ double BoundingBox::volume() {
 }
 
 Optional< std::pair<double, double> > BoundingBox::getIntersectionsWithRay(const Ray& ray) const {
-/*
-    return std::make_pair(
-        std::min(ray.getXT(minPoint.getX()), std::min(ray.getYT(minPoint.getY()), ray.getZT(minPoint.getZ()))),
-        std::max(ray.getXT(maxPoint.getX()), std::max(ray.getYT(maxPoint.getY()), ray.getZT(maxPoint.getZ())))
-    );
-*/
     double tEnter = -std::numeric_limits<double>::max();
     double tOut = std::numeric_limits<double>::max();
     bool hasEnter = false, hasOut = false;
@@ -125,7 +119,6 @@ Optional< std::pair<double, double> > BoundingBox::getIntersectionsWithRay(const
             tOut = newOut;
         }
     }
-
 
     if (!hasEnter || !hasOut) {
         return Optional< std::pair<double, double> >();
