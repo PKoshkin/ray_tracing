@@ -31,7 +31,8 @@ double Ray::getPointT(const Point& point) const {
 }
 
 double Ray::getCoordinateT(double coordinate, int axis) const {
-    return (direction *  (coordinate / direction[axis])  - Vector(start)).length();
+//    return (direction *  (coordinate / direction[axis])  - Vector(start)).length();
+    return (coordinate - start[axis]) / direction[axis];
 }
 
 double Ray::getXT(double x) const {

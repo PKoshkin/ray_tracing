@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "point.h"
+#include "constants.h"
 
 class BoundingBox {
 private:
@@ -94,10 +95,27 @@ double BoundingBox::volume() {
 }
 
 std::pair<double, double> BoundingBox::getIntersectionsWithRay(const Ray& ray) const {
+/*
     return std::make_pair(
         std::min(ray.getXT(minPoint.getX()), std::min(ray.getYT(minPoint.getY()), ray.getZT(minPoint.getZ()))),
         std::max(ray.getXT(maxPoint.getX()), std::max(ray.getYT(maxPoint.getY()), ray.getZT(maxPoint.getZ())))
     );
+*/
+    double tMin = std::numeric_limits<double>::min();
+    double tMax = std::numeric_limits<double>::max();
+    for (size_t axis = 0; axis < 3; ++axis) {
+        double inv = 1 / ray.direction[axis];
+        double lo = (minPoint[axis] - ray.start[axis]) * inv;
+        double hi = (maxPoint[axis] - ray.start[axis]) * inv;
+        tMin  = std::max(tMin, std::min(lo, hi));
+        tMax = std::min(tMax, std::max(lo, hi));
+    }
+
+    if (tMax + EPSILON < tMin) {
+        return std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::max());
+    }
+
+    return std::make_pair(tMin, tMax);
 }
 
 BoundingBox BoundingBox::operator+(const BoundingBox& inBox) const {
