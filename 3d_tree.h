@@ -42,9 +42,9 @@ struct Node {
 };
 
 Node::Node(const std::vector< std::shared_ptr<Figure> >& inFigures) : figures(inFigures), hasLeft(false), hasRight(false) {
-/*
+
     std::cout << "---------------------------------\n";
-*/
+
     commonBox = (*figures.begin())->boundingBox();
     for (auto it = figures.begin() + 1; it != figures.end(); ++it) {
         commonBox = commonBox + (*it)->boundingBox();
@@ -68,23 +68,20 @@ Node::Node(const std::vector< std::shared_ptr<Figure> >& inFigures) : figures(in
             }
         }
     }
-/*
+
     std::cout << "SAH = " << surfaceAreaHeuristic << " coordinate: " << coordinate << " axis: " << axis << std::endl;
     std::cout << "---------------------------------\n";
-*/
+
 }
 
 double Node::calculateSurfaceAreaHeuristic(double inCoordinate, int inAxis) {
     size_t leftN = 0, rightN = 0;
     for (auto it = figures.begin(); it != figures.end(); ++it) {
         // Смотрим, в какакую часть разбиения попал каждый примитив и прибавляем единичку соответствующему счетчику
-        if (inCoordinate >= (*it)->boundingBox().getMaxPoint()[inAxis]) {
+        if (inCoordinate >= (*it)->boundingBox().getMinPoint()[inAxis]) {
             ++leftN;
-        } else if (inCoordinate <= (*it)->boundingBox().getMinPoint()[inAxis]) {
-            ++rightN;
-        } else {
-            // Некоторые примитивы добавляются в обе области
-            ++leftN;
+        }
+        if (inCoordinate <= (*it)->boundingBox().getMaxPoint()[inAxis]) {
             ++rightN;
         }
     }
@@ -98,17 +95,17 @@ double Node::calculateSurfaceAreaHeuristic(double inCoordinate, int inAxis) {
             rightVolume *= fabs(commonBox.maxPoint[i] - inCoordinate);
         }
 
-/*
+
         std::cout << "calculating volume: " << commonBox.maxPoint[i] - commonBox.minPoint[i] << " "
             << commonBox.maxPoint[i] - commonBox.minPoint[i] << " " <<
             inCoordinate - commonBox.minPoint[i] << " " <<
             commonBox.maxPoint[i] - inCoordinate << std::endl;
-*/
+
 
 
     }
 
-//    std::cout << leftVolume << " * " << leftN << " + " << rightVolume << " * " << rightN << " = " << "new SAH: " << leftVolume * leftN + rightVolume * rightN << std::endl;
+    std::cout << leftVolume << " * " << leftN << " + " << rightVolume << " * " << rightN << " = " << "new SAH: " << leftVolume * leftN + rightVolume * rightN << std::endl;
 
     return leftVolume * leftN + rightVolume * rightN;
 }
@@ -123,25 +120,21 @@ void Node::split(int depth) {
     }
     std::vector< std::shared_ptr<Figure> > leftFigures, rightFigures;
 
-    std::cout << "-------------------------------\n";
+//    std::cout << "-------------------------------\n";
     for (auto it = figures.begin(); it != figures.end(); ++it) {
         // Смотрим, в какакую часть разбиения попал каждый примитив и добавляем его туда.
-        if (coordinate >= (*it)->boundingBox().getMaxPoint()[axis]) {
+        if (coordinate >= (*it)->boundingBox().getMinPoint()[axis]) {
             std::cout << "    left" << std::endl;
             leftFigures.push_back(*it);
-        } else if (coordinate <= (*it)->boundingBox().getMinPoint()[axis]) {
+        }
+        if (coordinate <= (*it)->boundingBox().getMaxPoint()[axis]) {
             std::cout << "    right" << std::endl;
-            rightFigures.push_back(*it);
-        } else {
-            // Некоторые примитивы добавляются в обе области
-            std::cout << "    left and right" << std::endl;
-            leftFigures.push_back(*it);
             rightFigures.push_back(*it);
         }
     }
-    std::cout << "-------------------------------\n";
+//    std::cout << "-------------------------------\n";
 
-    std::cout << "    left size: " << leftFigures.size() << " right size: " << rightFigures.size() << std::endl;
+//    std::cout << "    left size: " << leftFigures.size() << " right size: " << rightFigures.size() << std::endl;
 
     figures.clear();
     if (!leftFigures.empty()) {
@@ -149,7 +142,7 @@ void Node::split(int depth) {
         hasLeft = true;
     }
     if (!rightFigures.empty()) {
-        right = std::make_shared<Node>(leftFigures);
+        right = std::make_shared<Node>(rightFigures);
         hasRight = true;
     }
     if ((leftFigures.size() >= MAX_FIGURES_IN_NODE) && (depth <= MAX_DEPTH)) {
@@ -189,7 +182,7 @@ Optional<Intersection> Node::getIntersectionFromExactNode(const Ray& ray) const 
 Optional<Intersection> Node::getIntersection(const Ray& ray) const {
     if (!hasLeft && !hasRight) {
         // Дошли до листа, пора искать пересечения с фигурами
-        std::cout << "stop" << std::endl;
+//        std::cout << "stop" << std::endl;
         return getIntersectionFromExactNode(ray);
     }
     std::pair<double, double> boxT = commonBox.getIntersectionsWithRay(ray);
@@ -200,7 +193,7 @@ Optional<Intersection> Node::getIntersection(const Ray& ray) const {
 
     if ((splitT < boxT.first) || (splitT > boxT.second)) {
         // Пересечений у луча с боксом нет.
-        std::cout << "no intersection" << std::endl;
+//        std::cout << "no intersection" << std::endl;
         return Optional<Intersection>();
     }
 
@@ -227,19 +220,19 @@ Optional<Intersection> Node::getIntersection(const Ray& ray) const {
     if (hasFirst) {
         Optional<Intersection> intersection = first->getIntersection(ray);
         if (intersection.hasValue()) {
-            std::cout << "-> first";
+//            std::cout << "-> first";
             return intersection;
         } else {
             if (hasSecond) {
-                std::cout << "-> second";
+//                std::cout << "-> second";
                 return second->getIntersection(ray);
             } else {
-                std::cout << "-> nothing";
+//                std::cout << "-> nothing";
                 return Optional<Intersection>();
             }
         }
     } else {
-        std::cout << "-> second (no first)";
+//        std::cout << "-> second (no first)";
         // Правый сын здесь точно есть
         return second->getIntersection(ray);
     }
