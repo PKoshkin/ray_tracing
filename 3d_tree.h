@@ -78,9 +78,9 @@ double Node::calculateSurfaceAreaHeuristic(double inCoordinate, int inAxis) {
     size_t leftN = 0, rightN = 0;
     for (auto it = figures.begin(); it != figures.end(); ++it) {
         // Смотрим, в какакую часть разбиения попал каждый примитив и прибавляем единичку соответствующему счетчику
-        if (inCoordinate > (*it)->boundingBox().getMaxPoint()[inAxis]) {
+        if (inCoordinate >= (*it)->boundingBox().getMaxPoint()[inAxis]) {
             ++leftN;
-        } else if (inCoordinate < (*it)->boundingBox().getMinPoint()[inAxis]) {
+        } else if (inCoordinate <= (*it)->boundingBox().getMinPoint()[inAxis]) {
             ++rightN;
         } else {
             // Некоторые примитивы добавляются в обе области
@@ -126,10 +126,10 @@ void Node::split(int depth) {
     std::cout << "-------------------------------\n";
     for (auto it = figures.begin(); it != figures.end(); ++it) {
         // Смотрим, в какакую часть разбиения попал каждый примитив и добавляем его туда.
-        if (coordinate > (*it)->boundingBox().getMaxPoint()[axis]) {
+        if (coordinate >= (*it)->boundingBox().getMaxPoint()[axis]) {
             std::cout << "    left" << std::endl;
             leftFigures.push_back(*it);
-        } else if (coordinate < (*it)->boundingBox().getMinPoint()[axis]) {
+        } else if (coordinate <= (*it)->boundingBox().getMinPoint()[axis]) {
             std::cout << "    right" << std::endl;
             rightFigures.push_back(*it);
         } else {
@@ -144,23 +144,19 @@ void Node::split(int depth) {
     std::cout << "    left size: " << leftFigures.size() << " right size: " << rightFigures.size() << std::endl;
 
     figures.clear();
-    if (leftFigures.size() >= MAX_FIGURES_IN_NODE) {
+    if (!leftFigures.empty()) {
         left = std::make_shared<Node>(leftFigures);
         hasLeft = true;
-        if (depth <= MAX_DEPTH) {
-            left->split(depth + 1);
-        } else {
-//            std::cout << "    new left leaf!" << std::endl;
-        }
     }
-    if (rightFigures.size() >= MAX_FIGURES_IN_NODE) {
-        right = std::make_shared<Node>(rightFigures);
+    if (!rightFigures.empty()) {
+        right = std::make_shared<Node>(leftFigures);
         hasRight = true;
-        if (depth <= MAX_DEPTH) {
-            right->split(depth + 1);
-        } else {
-//            std::cout << "    new right leaf!" << std::endl;
-        }
+    }
+    if ((leftFigures.size() >= MAX_FIGURES_IN_NODE) && (depth <= MAX_DEPTH)) {
+        left->split(depth + 1);
+    }
+    if ((rightFigures.size() >= MAX_FIGURES_IN_NODE) && (depth <= MAX_DEPTH)) {
+        right->split(depth + 1);
     }
 }
 
