@@ -77,18 +77,14 @@ ColorRGB Scene::runRay(const Pixel& pixel) const {
         for (auto it = lighters.begin(); it != lighters.end(); ++it) {
 
             Ray lightRay(ray.getPoint(intersection.getValue().t), it->getPlace());
+            lightRay.slightlyMove(); // Немножко сдвигаем луч вперед, чтобы не вткнться в примитив, от которого мы запускаем луч
             Optional<Intersection> intersectionToLighter = tree.getIntersection(lightRay);
             if (intersectionToLighter.hasValue()) {
-                if (intersectionToLighter.getValue().t < lightRay.getPointT(it->getPlace())) {
+                if (intersectionToLighter.getValue().t > lightRay.getPointT(it->getPlace())) {
                     double k = fabs(scalarProduct(intersection.getValue().figure->normal(lightRay.start), lightRay.direction));
                     intensity += it->intensity(ray.getPoint(intersection.getValue().t)) * k;
-                } else {
-                    std::cout << "I wona this string" << std::endl;
                 }
             } else {
-
-                //std::cout << "don't have value!" << std::endl;
-
                 double k = fabs(scalarProduct(intersection.getValue().figure->normal(lightRay.start), lightRay.direction));
                 intensity += it->intensity(ray.getPoint(intersection.getValue().t)) * k;
             }

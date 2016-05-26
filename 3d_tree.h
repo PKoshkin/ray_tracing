@@ -16,7 +16,7 @@
 #include <iostream>
 
 
-const int MAX_DEPTH = 8;
+const int MAX_DEPTH = 0;
 const int MAX_FIGURES_IN_NODE = 1;
 
 struct Node {
@@ -95,7 +95,10 @@ double Node::calculateSurfaceAreaHeuristic(double inCoordinate, int inAxis) {
 
 void Node::split(int depth) {
     // Посчитаем SAH и проверим, надо ли было в вамом деле сплититься
-    if (commonBox.volume() * figures.size() < surfaceAreaHeuristic) {
+    if (commonBox.getArea() * figures.size() < surfaceAreaHeuristic + EPSILON) {
+        return;
+    }
+    if ((figures.size() <= MAX_FIGURES_IN_NODE) || (depth >= MAX_DEPTH)) {
         return;
     }
     std::vector< std::shared_ptr<Figure> > leftFigures, rightFigures;
@@ -113,17 +116,13 @@ void Node::split(int depth) {
     figures.clear();
     if (!leftFigures.empty()) {
         left = std::make_shared<Node>(leftFigures);
+        left->split(depth + 1);
         hasLeft = true;
     }
     if (!rightFigures.empty()) {
         right = std::make_shared<Node>(rightFigures);
-        hasRight = true;
-    }
-    if ((leftFigures.size() >= MAX_FIGURES_IN_NODE) && (depth <= MAX_DEPTH)) {
-        left->split(depth + 1);
-    }
-    if ((rightFigures.size() >= MAX_FIGURES_IN_NODE) && (depth <= MAX_DEPTH)) {
         right->split(depth + 1);
+        hasRight = true;
     }
 }
 
@@ -257,7 +256,6 @@ void Node::show(int depth) {
     if (hasRight) { 
         right->show(depth + 1);
     }
-
 }
 
 #endif

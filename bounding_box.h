@@ -26,9 +26,7 @@ public:
     double getMaxX() const;
     double getMaxY() const;
     double getMaxZ() const;
-    int mostLengthAxis() const;
-    double mostLengthAxisMiddle() const;
-    double volume();
+    double getArea() const;
 
     Optional< std::pair<double, double> > getIntersectionsWithRay(const Ray& ray) const;
 
@@ -74,25 +72,12 @@ double BoundingBox::getMaxZ() const {
     return maxPoint.getZ();
 }
 
-int BoundingBox::mostLengthAxis() const {
-    if ((maxPoint.getX() - minPoint.getX() > maxPoint.getY() - minPoint.getY()) && (maxPoint.getX() - minPoint.getX() > maxPoint.getZ() - minPoint.getZ())) {
-        return 0;
-    } else if ((maxPoint.getY() - minPoint.getY() > maxPoint.getX() - minPoint.getX()) && (maxPoint.getY() - minPoint.getY() > maxPoint.getZ() - minPoint.getZ())) {
-        return 1;
-    } else {
-        return 2;
+double BoundingBox::getArea() const {
+    double sides[3];
+    for (size_t axis = 0; axis < 3; ++axis) {
+        sides[axis] = maxPoint[axis] - minPoint[axis];
     }
-}
-
-double BoundingBox::mostLengthAxisMiddle() const {
-    if ((maxPoint[mostLengthAxis()] + minPoint[mostLengthAxis()]) / 2 != 0) {
-        std::cout << "    middle: " << (maxPoint[mostLengthAxis()] + minPoint[mostLengthAxis()]) / 2 << std::endl;
-    }
-    return (maxPoint[mostLengthAxis()] + minPoint[mostLengthAxis()]) / 2;
-}
-
-double BoundingBox::volume() {
-    return (getMaxX() - getMinX()) * (getMaxY() - getMinY()) * (getMaxZ() - getMinZ());
+    return 2 * (sides[0] * sides[1] + sides[1] * sides[2] + sides[2] * sides[0]);
 }
 
 Optional< std::pair<double, double> > BoundingBox::getIntersectionsWithRay(const Ray& ray) const {

@@ -2,6 +2,7 @@
 #define RAY_KOSHKIN_493
 
 #include "vector.h"
+#include "constants.h"
 #include "point.h"
 
 struct Ray {
@@ -16,6 +17,7 @@ struct Ray {
     double getXT(double x) const;
     double getYT(double y) const;
     double getZT(double z) const;
+    void slightlyMove();
 };
 
 Ray::Ray(const Point& inStart, const Vector& inDirection) : start(inStart), direction(inDirection.normalized()) {}
@@ -44,6 +46,10 @@ double Ray::getYT(double y) const {
 
 double Ray::getZT(double z) const {
     return getCoordinateT(z, 2);
+}
+
+void Ray::slightlyMove() {
+    start = (Vector(start) + direction * EPSILON).getEnd();
 }
 
 #endif
