@@ -118,7 +118,7 @@ Optional< std::pair<double, double> > BoundingBox::getIntersectionsWithRay(const
             hasOut = true;
             continue;
         }
-        if (newEnter < tEnter) {
+        if (newEnter > tEnter) {
             tEnter = newEnter;
         }
         if (newOut < tOut) {
