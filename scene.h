@@ -11,9 +11,12 @@
 #include "figure.h"
 #include "point.h"
 #include "color.h"
+#include "intersection.h"
+#include "optional.h"
 #include "constants.h"
 #include "lighter.h"
 #include "ray.h"
+#include "3d_tree.h"
 
 class Scene {
 private:
@@ -30,26 +33,28 @@ public:
     Vector axisY;
 
     std::vector< std::vector<Pixel> > pixels;
-    std::vector< std::shared_ptr<Figure> > figures;
+    Tree3D tree;
     std::vector<Lighter> lighters;
 
 public:
     Scene() {}
     Scene(double inWidth, double inHeight, Vector inVectorToCenter, Point inCamera, Vector inAxisX, Vector inAxisY);
-    void addFigure(std::shared_ptr<Figure> figure);
+    void setTree(const Tree3D& inTree);
     void addLighter(const Lighter& inLighter);
     Ray rayToPixel(const Pixel& pixel) const;
     ColorRGB runRay(const Pixel& pixel) const;
     void process(int screenWidth, int screenHeight);
     void save(const char* file) const;
-    void antialiase();
+    void antialiase(size_t times = 1);
+    void whiteBalance();
 };
 
 Scene::Scene(double inWidth, double inHeight, Vector inVectorToCenter, Point inCamera, Vector inAxisX, Vector inAxisY) :
     height(inHeight), width(inWidth), vectorToCenter(inVectorToCenter), camera(inCamera), axisX(inAxisX.normalized()), axisY(inAxisY.normalized()) {}
 
-void Scene::addFigure(std::shared_ptr<Figure> figure) {
-    figures.emplace_back(std::move(figure));
+
+void Scene::setTree(const Tree3D& inTree) {
+    tree = inTree;
 }
 
 void Scene::addLighter(const Lighter& inLighter) {
@@ -66,50 +71,29 @@ Ray Scene::rayToPixel(const Pixel& pixel) const {
 ColorRGB Scene::runRay(const Pixel& pixel) const {
     Ray ray = rayToPixel(pixel);
 
-    // Ищем фигуру, с которой пересекается луч
-    std::shared_ptr<Figure> intersectingFigurePointer;
-    double t; // Параметр луча, отвечающий точке пересечения
-    bool foundIntersections = false;
-    for (auto it = figures.begin(); it != figures.end(); ++it) {
-        Optional<double> tempT = (*it)->getT(ray);
-        if (tempT.hasValue()) {
-            if (!foundIntersections) {
-                intersectingFigurePointer = *it;
-                t = tempT.getValue();
-                foundIntersections = true;
-                continue;
-            } else {
-                if (tempT.getValue() < t) {
-                    intersectingFigurePointer = *it;
-                    t = tempT.getValue();
-                }
-            }
-        }
-    }
-    if (foundIntersections) {
+    Optional<Intersection> intersection = tree.getIntersection(ray);
+    if (intersection.hasValue()) {
         double intensity = 0;
         for (auto it = lighters.begin(); it != lighters.end(); ++it) {
 
-            Ray lightRay(ray.getPoint(t), it->getPlace());
-            bool shines = true;
-            for (auto jt = figures.begin(); jt != figures.end(); ++jt) {
-                if ((*jt) == intersectingFigurePointer) {
-                    continue;
+            Ray lightRay(ray.getPoint(intersection.getValue().t), it->getPlace());
+            Optional<Intersection> intersectionToLighter = tree.getIntersection(lightRay);
+            if (intersectionToLighter.hasValue()) {
+                if (intersectionToLighter.getValue().t < lightRay.getPointT(it->getPlace())) {
+                    double k = fabs(scalarProduct(intersection.getValue().figure->normal(lightRay.start), lightRay.direction));
+                    intensity += it->intensity(ray.getPoint(intersection.getValue().t)) * k;
+                } else {
+                    std::cout << "I wona this string" << std::endl;
                 }
-                Optional<double> currentT = (*jt)->getT(lightRay);
-                if (currentT.hasValue()) {
-                    if (currentT.getValue() < lightRay.getPointT(it->getPlace())) {
-                        shines = false;
-                        break;
-                    }
-                }
-            }
-            if (shines) {
-                double k = fabs(scalarProduct(intersectingFigurePointer->normal(lightRay.start), lightRay.direction));
-                intensity += it->intensity(ray.getPoint(t)) * k;
+            } else {
+
+                //std::cout << "don't have value!" << std::endl;
+
+                double k = fabs(scalarProduct(intersection.getValue().figure->normal(lightRay.start), lightRay.direction));
+                intensity += it->intensity(ray.getPoint(intersection.getValue().t)) * k;
             }
         }
-        return intersectingFigurePointer->getColor().normalized(intensity);
+        return intersection.getValue().figure->getColor().normalized(intensity);
     } else {
         return ColorRGB();
     }
@@ -134,46 +118,72 @@ void Scene::process(int screenWidth, int screenHeight) {
     }
 }
 
-void Scene::antialiase() {
-    std::vector< std::vector<Pixel> > oldPixels;
-    oldPixels.reserve(pixels.size());
-    for (size_t i = 0; i < pixels.size(); ++i) {
-        oldPixels.push_back(std::vector<Pixel>());
-        oldPixels[i].reserve(pixels[0].size());
-        for (size_t j = 0; j < pixels[i].size(); ++j) {
-            oldPixels[i].push_back(pixels[i][j]);
+void Scene::antialiase(size_t times) {
+    for (size_t time = 0; time < times; ++time) {
+        // Сохраняем старые пиксели
+        std::vector< std::vector<Pixel> > oldPixels;
+        oldPixels.reserve(pixels.size());
+        for (size_t i = 0; i < pixels.size(); ++i) {
+            oldPixels.push_back(std::vector<Pixel>());
+            oldPixels[i].reserve(pixels[0].size());
+            for (size_t j = 0; j < pixels[i].size(); ++j) {
+                oldPixels[i].push_back(pixels[i][j]);
+            }
+        }
+
+        // Новые пиксели - среднее арифметическое всех близлежащих.
+        for (size_t i = 0; i < pixels.size(); ++i) {
+            for (size_t j = 0; j < pixels[i].size(); ++j) {
+                std::vector<ColorRGB> mixingColors;
+                mixingColors.push_back(oldPixels[i][j].getColor());
+                if ((i > 0) && (j > 0)) {
+                    mixingColors.push_back(oldPixels[i - 1][j - 1].getColor());
+                }
+                if (i > 0) {
+                    mixingColors.push_back(oldPixels[i - 1][j].getColor());
+                }
+                if ((i > 0) && (j < pixels.size() - 1)) {
+                    mixingColors.push_back(oldPixels[i - 1][j + 1].getColor());
+                }
+                if (j > 0) {
+                    mixingColors.push_back(oldPixels[i][j - 1].getColor());
+                }
+                if (j < pixels.size() - 1) {
+                    mixingColors.push_back(oldPixels[i][j + 1].getColor());
+                }
+                if ((j > 0) && (i < pixels.size() - 1)) {
+                    mixingColors.push_back(oldPixels[i + 1][j - 1].getColor());
+                }
+                if (i < pixels.size() - 1) {
+                    mixingColors.push_back(oldPixels[i + 1][j].getColor());
+                }
+                if ((i < pixels.size() - 1) && (j < pixels.size() - 1)) {
+                    mixingColors.push_back(oldPixels[i + 1][j + 1].getColor());
+                }
+                pixels[i][j].setColor(ColorRGB(mixingColors));
+            }
         }
     }
+}
 
+void Scene::whiteBalance() {
+    double maxColor = 0;
     for (size_t i = 0; i < pixels.size(); ++i) {
         for (size_t j = 0; j < pixels[i].size(); ++j) {
-            std::vector<ColorRGB> mixingColors;
-            mixingColors.push_back(oldPixels[i][j].getColor());
-            if ((i > 0) && (j > 0)) {
-                mixingColors.push_back(oldPixels[i - 1][j - 1].getColor());
+            if (pixels[i][j].getRed() > maxColor) {
+                maxColor = pixels[i][j].getRed();
             }
-            if (i > 0) {
-                mixingColors.push_back(oldPixels[i - 1][j].getColor());
+            if (pixels[i][j].getGreen() > maxColor) {
+                maxColor = pixels[i][j].getGreen();
             }
-            if ((i > 0) && (j < pixels.size() - 1)) {
-                mixingColors.push_back(oldPixels[i - 1][j + 1].getColor());
+            if (pixels[i][j].getBlue() > maxColor) {
+                maxColor = pixels[i][j].getBlue();
             }
-            if (j > 0) {
-                mixingColors.push_back(oldPixels[i][j - 1].getColor());
-            }
-            if (j < pixels.size() - 1) {
-                mixingColors.push_back(oldPixels[i][j + 1].getColor());
-            }
-            if ((j > 0) && (i < pixels.size() - 1)) {
-                mixingColors.push_back(oldPixels[i + 1][j - 1].getColor());
-            }
-            if (i < pixels.size() - 1) {
-                mixingColors.push_back(oldPixels[i + 1][j].getColor());
-            }
-            if ((i < pixels.size() - 1) && (j < pixels.size() - 1)) {
-                mixingColors.push_back(oldPixels[i + 1][j + 1].getColor());
-            }
-            pixels[i][j].setColor(ColorRGB(mixingColors));
+        }
+    }
+    for (size_t i = 0; i < pixels.size(); ++i) {
+        for (size_t j = 0; j < pixels[i].size(); ++j) {
+            pixels[i][j].setColor(pixels[i][j].getColor().normalized(1 / maxColor));
         }
     }
 }

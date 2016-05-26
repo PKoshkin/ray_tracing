@@ -23,19 +23,8 @@ int main(int argc, char** argv) {
     }
     Scene realScene = scene.getValue();
 
-    Tree3D tree(realScene.figures); 
-
-    Optional<Intersection> intersection = tree.getIntersection(Ray(Point(0, 0, 0), Vector(0, 1, 0)));
-    if (intersection.hasValue()) {
-        std::cout << "Wow!" << std::endl;
-    } else {
-        std::cout << "No. =(" << std::endl;
-    }
-
-
-/*
     realScene.process(std::atoi(argv[2]), std::atoi(argv[3]));
+    realScene.whiteBalance();
     realScene.save("not_antianalised.png");
-*/
     return 0;
 }

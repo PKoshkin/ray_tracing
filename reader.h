@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <memory>
 #include <sstream>
 
 #include "scene.h"
@@ -96,15 +97,23 @@ Optional<Scene> Reader::getScene() {
         for (auto it = sceneData.lighters.begin(); it != sceneData.lighters.end(); ++it) {
             scene.addLighter(Lighter(it->first, lightConstant * it->second));
         }
+
+        std::vector< std::shared_ptr<Figure> > figures;
         for (auto it = sceneData.figures.begin(); it != sceneData.figures.end(); ++it) {
             for (auto jt = sceneData.materials.begin(); jt != sceneData.materials.end(); ++jt) {
                 if (jt->name == it->second) {
                     it->first->setColor(jt->color);
-                    scene.addFigure(std::move(it->first));
+                    figures.push_back(std::move(it->first));
                     break;
                 }
             }
         }
+        Tree3D tree(figures);
+
+        tree.show();
+
+
+        scene.setTree(tree);
         return Optional<Scene>(scene);
     }
 }

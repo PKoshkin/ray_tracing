@@ -30,6 +30,7 @@ public:
     virtual ColorRGB getColor() const;
     virtual Optional<double> getT(const Ray& ray) const;
     virtual BoundingBox boundingBox() const;
+    virtual std::pair<double, double> getMinMaxByAxis(size_t axis) const;
 
     virtual void show() const;
 };
@@ -78,19 +79,18 @@ Optional<double> Triangle::getT(const Ray& ray) const {
     if (fabs(det) < EPSILON) {
         return Optional<double>();
     }
-    double inv_det = 1.0 / det;
     Vector move = Vector(ray.start) - Vector(points[0]);
 
-    double u = scalarProduct(move, P) * inv_det;
+    double u = scalarProduct(move, P) / det;
     if (u < 0.0 || u > 1.0) {
         return Optional<double>();
     }
     Vector Q = vectorProduct(move, edge1);
-    double v = scalarProduct(ray.direction, Q) * inv_det;
+    double v = scalarProduct(ray.direction, Q) / det;
     if(v < 0.0 || u + v  > 1.0) {
         return Optional<double>();
     }
-    double t = scalarProduct(edge2, Q) * inv_det;
+    double t = scalarProduct(edge2, Q) / det;
     if (t > 0) {
         return Optional<double>(t);
     } else {
@@ -106,6 +106,13 @@ BoundingBox Triangle::boundingBox() const {
     double maxY = std::max(points[0].getY(), std::max(points[1].getY(), points[2].getY()));
     double maxZ = std::max(points[0].getZ(), std::max(points[1].getZ(), points[2].getZ()));
     return BoundingBox(Point(minX, minY, minZ), Point(maxX, maxY, maxZ));
+}
+
+std::pair<double, double> Triangle::getMinMaxByAxis(size_t axis) const {
+    return std::make_pair(
+        std::min(points[0][axis], std::min(points[1][axis], points[2][axis])),
+        std::max(points[0][axis], std::max(points[1][axis], points[2][axis]))
+    );
 }
 
 void Triangle::show() const {

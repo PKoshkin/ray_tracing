@@ -7,6 +7,7 @@
 
 class BoundingBox {
 private:
+public:
     Point minPoint;
     Point maxPoint;
 
@@ -25,11 +26,12 @@ public:
     double getMaxZ() const;
     int mostLengthAxis() const;
     double mostLengthAxisMiddle() const;
+    double volume();
 
-    std::pair<double, double> getIntersectionsWithRay(const Ray& ray);
+    std::pair<double, double> getIntersectionsWithRay(const Ray& ray) const;
 
     BoundingBox operator+(const BoundingBox& inBox) const;
-    BoundingBox operator=(const BoundingBox& inBox);
+    BoundingBox& operator=(const BoundingBox& inBox);
 };
 
 BoundingBox::BoundingBox() {}
@@ -81,13 +83,20 @@ int BoundingBox::mostLengthAxis() const {
 }
 
 double BoundingBox::mostLengthAxisMiddle() const {
-    return maxPoint[mostLengthAxis()] - minPoint[mostLengthAxis()];
+    if ((maxPoint[mostLengthAxis()] + minPoint[mostLengthAxis()]) / 2 != 0) {
+        std::cout << "    middle: " << (maxPoint[mostLengthAxis()] + minPoint[mostLengthAxis()]) / 2 << std::endl;
+    }
+    return (maxPoint[mostLengthAxis()] + minPoint[mostLengthAxis()]) / 2;
 }
 
-std::pair<double, double> BoundingBox::getIntersectionsWithRay(const Ray& ray) {
+double BoundingBox::volume() {
+    return (getMaxX() - getMinX()) * (getMaxY() - getMinY()) * (getMaxZ() - getMinZ());
+}
+
+std::pair<double, double> BoundingBox::getIntersectionsWithRay(const Ray& ray) const {
     return std::make_pair(
-        std::min(ray.getXT(minPoint.getX()), std::min(ray.getYT(minPoint.getY()), ray.getXT(minPoint.getZ()))),
-        std::max(ray.getXT(maxPoint.getX()), std::max(ray.getYT(maxPoint.getY()), ray.getXT(maxPoint.getZ())))
+        std::min(ray.getXT(minPoint.getX()), std::min(ray.getYT(minPoint.getY()), ray.getZT(minPoint.getZ()))),
+        std::max(ray.getXT(maxPoint.getX()), std::max(ray.getYT(maxPoint.getY()), ray.getZT(maxPoint.getZ())))
     );
 }
 
@@ -98,9 +107,10 @@ BoundingBox BoundingBox::operator+(const BoundingBox& inBox) const {
     );
 }
 
-BoundingBox BoundingBox::operator=(const BoundingBox& inBox) {
+BoundingBox& BoundingBox::operator=(const BoundingBox& inBox) {
     minPoint = inBox.minPoint;
     maxPoint = inBox.maxPoint;
+    return *this;
 }
 
 #endif

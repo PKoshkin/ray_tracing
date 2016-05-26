@@ -26,6 +26,7 @@ public:
     virtual ColorRGB getColor() const;
     virtual Optional<double> getT(const Ray& ray) const;
     virtual BoundingBox boundingBox() const;
+    virtual std::pair<double, double> getMinMaxByAxis(size_t axis) const;
 
     virtual void show() const;
 };
@@ -73,6 +74,10 @@ BoundingBox Sphere::boundingBox() const {
         Point(center.getX() - radius, center.getY() - radius, center.getZ() - radius),
         Point(center.getX() + radius, center.getY() + radius, center.getZ() + radius)
     );
+}
+
+std::pair<double, double> Sphere::getMinMaxByAxis(size_t axis) const {
+    return std::make_pair(center[axis] - radius, center[axis] + radius);
 }
 
 void Sphere::show() const {

@@ -1,6 +1,8 @@
 #ifndef FIGURE_KOSHKIN_493 
 #define FIGURE_KOSHKIN_493
 
+#include <utility>
+
 #include "color.h"
 #include "ray.h"
 #include "bounding_box.h"
@@ -14,6 +16,7 @@ public:
     virtual ColorRGB getColor() const = 0;
     virtual Optional<double> getT(const Ray& ray) const = 0; // Возвращает наименьший положительный параметр, если он есть
     virtual BoundingBox boundingBox() const = 0;
+    virtual std::pair<double, double> getMinMaxByAxis(size_t axis) const = 0; // Возвращает минимальное и максимальное значение примитива по выбранной оси.
 
     virtual void show() const = 0;
 };
