@@ -102,21 +102,39 @@ Optional< std::pair<double, double> > BoundingBox::getIntersectionsWithRay(const
         std::max(ray.getXT(maxPoint.getX()), std::max(ray.getYT(maxPoint.getY()), ray.getZT(maxPoint.getZ())))
     );
 */
-    double tMin = -std::numeric_limits<double>::max();
-    double tMax = std::numeric_limits<double>::max();
+    double tEnter = -std::numeric_limits<double>::max();
+    double tOut = std::numeric_limits<double>::max();
+    bool hasEnter = false, hasOut = false;
     for (size_t axis = 0; axis < 3; ++axis) {
-        double inv = 1 / ray.direction[axis];
-        double lo = (minPoint[axis] - ray.start[axis]) * inv;
-        double hi = (maxPoint[axis] - ray.start[axis]) * inv;
-        tMin  = std::max(tMin, std::min(lo, hi));
-        tMax = std::min(tMax, std::max(lo, hi));
+        double newEnter = std::min(ray.getCoordinateT(minPoint[axis], axis), ray.getCoordinateT(maxPoint[axis], axis));
+        double newOut = std::max(ray.getCoordinateT(minPoint[axis], axis), ray.getCoordinateT(maxPoint[axis], axis));
+        if (!hasEnter) {
+            tEnter = newOut;
+            hasEnter = true;
+            continue;
+        }
+        if (!hasOut) {
+            tOut = newOut;
+            hasOut = true;
+            continue;
+        }
+        if (newEnter < tEnter) {
+            tEnter = newEnter;
+        }
+        if (newOut < tOut) {
+            tOut = newOut;
+        }
     }
 
-    if (tMax + EPSILON < tMin) {
+
+    if (!hasEnter || !hasOut) {
+        return Optional< std::pair<double, double> >();
+    }
+    if (tOut + EPSILON < tEnter) {
         return Optional< std::pair<double, double> >();
     }
 
-    return Optional< std::pair<double, double> >(std::make_pair(tMin, tMax));
+    return Optional< std::pair<double, double> >(std::make_pair(tEnter, tOut));
 }
 
 BoundingBox BoundingBox::operator+(const BoundingBox& inBox) const {
