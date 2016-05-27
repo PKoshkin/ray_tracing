@@ -20,16 +20,16 @@ const int MAX_DEPTH = 5;
 const int MAX_FIGURES_IN_NODE = 3;
 
 struct Node {
-    std::shared_ptr<Node> left;//
+    std::vector< std::shared_ptr<Figure> > figures;
+    bool hasLeft, hasRight;
+
+    std::shared_ptr<Node> left;
     std::shared_ptr<Node> right;
     BoundingBox commonBox;
 
     int axis; // 0 - x, 1 - y, 2 - z
     double coordinate;
-    bool hasLeft, hasRight;
     double surfaceAreaHeuristic;
-
-    std::vector< std::shared_ptr<Figure> > figures;
 
     Node(const std::vector< std::shared_ptr<Figure> >& figures);
     void split(int depth = 0);
@@ -50,7 +50,7 @@ Node::Node(const std::vector< std::shared_ptr<Figure> >& inFigures) : figures(in
     surfaceAreaHeuristic = std::numeric_limits<double>::max();
     for (size_t currentAxis = 0; currentAxis < 3; ++currentAxis) {
         for (auto it = figures.begin(); it != figures.end(); ++it) {
-            std::pair<double, double> coordinates = (*it)->getMinMaxByAxis(axis);
+            std::pair<double, double> coordinates = (*it)->getMinMaxByAxis(currentAxis);
             double minSAH = calculateSurfaceAreaHeuristic(coordinates.first, currentAxis);
             double maxSAH = calculateSurfaceAreaHeuristic(coordinates.second, currentAxis);
             if (minSAH < surfaceAreaHeuristic) {
@@ -80,8 +80,8 @@ double Node::calculateSurfaceAreaHeuristic(double inCoordinate, int inAxis) {
     }
     double leftSides[3], rightSides[3];
     for (int currentAxis = 0; currentAxis < 3; ++currentAxis) {
-        if (currentAxis != axis) {
-            rightSides[currentAxis] = commonBox.maxPoint[currentAxis] - commonBox.minPoint[currentAxis];
+        if (currentAxis != inAxis) {
+            leftSides[currentAxis] = commonBox.maxPoint[currentAxis] - commonBox.minPoint[currentAxis];
             rightSides[currentAxis] = commonBox.maxPoint[currentAxis] - commonBox.minPoint[currentAxis];
         } else {
             leftSides[currentAxis] = fabs(inCoordinate - commonBox.minPoint[currentAxis]);
@@ -95,7 +95,7 @@ double Node::calculateSurfaceAreaHeuristic(double inCoordinate, int inAxis) {
 
 void Node::split(int depth) {
     // Посчитаем SAH и проверим, надо ли было в вамом деле сплититься
-    if (commonBox.getArea() * figures.size() < surfaceAreaHeuristic + EPSILON) {
+    if (commonBox.getArea() * figures.size() * 3 < surfaceAreaHeuristic + EPSILON) {
         return;
     }
     if ((figures.size() <= MAX_FIGURES_IN_NODE) || (depth >= MAX_DEPTH)) {
@@ -166,7 +166,7 @@ Optional<Intersection> Node::getIntersection(const Ray& ray) const {
     // Сначала пойдем в ребенка, в котором лежит начало луча
     std::shared_ptr<Node> first, second;
     bool hasFirst, hasSecond;
-    if (ray.start[axis] < coordinate) {
+    if (ray.direction[axis] > 0) {
         first = left;
         second = right;
         hasFirst = hasLeft;
@@ -178,14 +178,14 @@ Optional<Intersection> Node::getIntersection(const Ray& ray) const {
         hasSecond = hasLeft;
     }
 
-    if (splitT <= boxT.getValue().first) {
+    if (splitT <= boxT.getValue().first + EPSILON) {
         if (hasSecond) {
             return second->getIntersection(ray);
         } else {
             return Optional<Intersection>();
         }
     }
-    if (splitT >= boxT.getValue().second) {
+    if (splitT >= boxT.getValue().second - EPSILON) {
         if (hasFirst) {
             return first->getIntersection(ray);
         } else {

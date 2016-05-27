@@ -81,6 +81,10 @@ int Reader::processScene(int screenWidth, int screenHeight, const char* fileName
     if (read() == -1) {
         return -1;
     } else {
+
+        std::cout << "file read" << std::endl;
+
+
         double width = distance(sceneData.topRight, sceneData.topLeft);
         double height = distance(sceneData.topLeft, sceneData.bottomLeft);
         Vector xAxis = (Vector(sceneData.topRight) - Vector(sceneData.topLeft)).normalized();
@@ -111,7 +115,12 @@ int Reader::processScene(int screenWidth, int screenHeight, const char* fileName
             }
         }
 
+
         Tree3D tree(figures);
+
+        std::cout << "tree ready" << std::endl;
+        tree.show();
+
         scene.setTree(tree);
         scene.process(screenWidth, screenHeight);
         scene.whiteBalance();
@@ -121,6 +130,7 @@ int Reader::processScene(int screenWidth, int screenHeight, const char* fileName
 }
 
 void Reader::getWordFromNewLine() {
+
     std::string lineString;
     std::getline(file, lineString);
     line = std::stringstream(lineString);

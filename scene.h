@@ -25,8 +25,8 @@ public:
     double height;
     double width;
 
-    Point camera; // Точка в которой стоит камера
     Vector vectorToCenter; // Вектор от камеры до центра экрана
+    Point camera; // Точка в которой стоит камера
 
     // Базис в плоскости экрана
     Vector axisX;
@@ -80,7 +80,7 @@ ColorRGB Scene::runRay(const Pixel& pixel) const {
             lightRay.slightlyMove(); // Немножко сдвигаем луч вперед, чтобы не вткнться в примитив, от которого мы запускаем луч
             Optional<Intersection> intersectionToLighter = tree.getIntersection(lightRay);
             if (intersectionToLighter.hasValue()) {
-                if (intersectionToLighter.getValue().t > lightRay.getPointT(it->getPlace())) {
+                if (intersectionToLighter.getValue().t + EPSILON > lightRay.getPointT(it->getPlace())) {
                     double k = fabs(scalarProduct(intersection.getValue().figure->normal(lightRay.start), lightRay.direction));
                     intensity += it->intensity(ray.getPoint(intersection.getValue().t)) * k;
                 }

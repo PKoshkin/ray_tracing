@@ -5,6 +5,8 @@
 
 #include "math.h"
 
+#include <iostream>
+
 class Point {
 private:
     double x;
@@ -44,6 +46,9 @@ double Point::operator[](int index) const {
         return y;
     } else if (index == 2) {
         return z;
+    } else {
+        std::cout << "Bad operator[]" << std::endl;
+        return x;
     }
 }
 
