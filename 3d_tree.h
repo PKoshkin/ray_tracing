@@ -17,7 +17,7 @@
 
 
 const int MAX_DEPTH = 0;
-const int MAX_FIGURES_IN_NODE = 1;
+const int MAX_FIGURES_IN_NODE = 3;
 
 struct Node {
     std::shared_ptr<Node> left;//

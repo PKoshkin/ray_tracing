@@ -17,6 +17,7 @@
 #include "plane.h"
 #include "sphere.h"
 #include "triangle.h"
+#include "quadrangle.h"
 
 struct Material {
     std::string name;
@@ -63,10 +64,11 @@ public:
     int readGeometry();
     int readSphere();
     int readTriangle();
+    int readQuadrangle();
 
     void getWordFromNewLine();
 
-    void showData() {
+    void showData() const {
         std::cout << "origin: " << sceneData.origin << " top left: " << sceneData.topLeft << " bottomLeft: " << sceneData.bottomLeft << " top right: " << sceneData.topRight << std::endl;
         std::cout << "materials: " << sceneData.materials.size() << " lighters: " << sceneData.lighters.size() << " figures: " << sceneData.figures.size() << std::endl;
     }
@@ -109,9 +111,6 @@ Optional<Scene> Reader::getScene() {
             }
         }
         Tree3D tree(figures);
-
-        tree.show();
-
 
         scene.setTree(tree);
         return Optional<Scene>(scene);
@@ -261,6 +260,10 @@ int Reader::readGeometry() {
             if (readTriangle() == -1) {
                 return -1;
             }
+        } else if (word == "quadrangle") {
+            if (readQuadrangle() == -1) {
+                return -1;
+            }
         }
     } 
     return 0;
@@ -310,6 +313,29 @@ int Reader::readTriangle() {
     } 
     std::shared_ptr<Triangle> newTriangle(new Triangle(points[0], points[1], points[2]));
     sceneData.figures.push_back(std::make_pair(newTriangle, materialName));
+    return 0;
+}
+
+int Reader::readQuadrangle() {
+    Point points[4];
+    int index = 0;
+    std::string materialName;
+    while (word != "endquadrangle") {
+        if (!file) {
+            // Файл закончился без закрытия блока
+            return -1;
+        }
+        getWordFromNewLine();
+
+        if (word == "vertex") {
+            line >> points[index];
+            ++index;
+        } else if (word == "material") {
+            line >> materialName;
+        }
+    } 
+    std::shared_ptr<Quadrangle> newQuadrangle(new Quadrangle(points[0], points[1], points[2], points[3]));
+    sceneData.figures.push_back(std::make_pair(newQuadrangle, materialName));
     return 0;
 }
 
