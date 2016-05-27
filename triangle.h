@@ -14,9 +14,11 @@
 
 class Triangle : public virtual Figure {
 private:
-public:
     std::vector<Point> points;
     ColorRGB color;
+    double reflection;
+    double refraction;
+    double alpha;
 
 public:
     Triangle(const Point& point1, const Point& point2, const Point& point3, const ColorRGB& inColor = ColorRGB(1, 0, 0));
@@ -25,6 +27,9 @@ public:
     double area() const;
     Plane getPlane() const;
 
+    virtual double getReflection() const;
+    virtual double getRefraction() const;
+    virtual double getAlpha() const;
     virtual Vector normal(const Point& point) const;
     virtual void setColor(const ColorRGB& inColor);
     virtual ColorRGB getColor() const;
@@ -51,6 +56,18 @@ Triangle::Triangle(const Triangle& triangle) {
 
 Vector Triangle::normal(const Point& point) const {
     return vectorProduct(Vector(points[1]) - Vector(points[0]), Vector(points[2]) - Vector(points[0])).normalized();
+}
+
+double Triangle::getReflection() const {
+    return reflection;
+}
+
+double Triangle::getRefraction() const {
+    return refraction;
+}
+
+double Triangle::getAlpha() const {
+    return alpha;
 }
 
 double Triangle::area() const {

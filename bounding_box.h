@@ -81,14 +81,13 @@ double BoundingBox::getArea() const {
 }
 
 Optional< std::pair<double, double> > BoundingBox::getIntersectionsWithRay(const Ray& ray) const {
-    double tEnter = -std::numeric_limits<double>::max();
-    double tOut = std::numeric_limits<double>::max();
+    double tEnter, tOut;
     bool hasEnter = false, hasOut = false;
     for (size_t axis = 0; axis < 3; ++axis) {
         double newEnter = std::min(ray.getCoordinateT(minPoint[axis], axis), ray.getCoordinateT(maxPoint[axis], axis));
         double newOut = std::max(ray.getCoordinateT(minPoint[axis], axis), ray.getCoordinateT(maxPoint[axis], axis));
         if (!hasEnter) {
-            tEnter = newOut;
+            tEnter = newEnter;
             hasEnter = true;
             continue;
         }

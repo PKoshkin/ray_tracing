@@ -16,7 +16,7 @@
 #include <iostream>
 
 
-const int MAX_DEPTH = 0;
+const int MAX_DEPTH = 5;
 const int MAX_FIGURES_IN_NODE = 3;
 
 struct Node {
@@ -185,7 +185,7 @@ Optional<Intersection> Node::getIntersection(const Ray& ray) const {
             return Optional<Intersection>();
         }
     }
-    if (splitT >= boxT.getValue().first) {
+    if (splitT >= boxT.getValue().second) {
         if (hasFirst) {
             return first->getIntersection(ray);
         } else {

@@ -14,14 +14,19 @@
 
 class Quadrangle : public virtual Figure {
 private:
-public:
     std::vector<Point> points;
     ColorRGB color;
+    double reflection;
+    double refraction;
+    double alpha;
 
 public:
     Quadrangle(const Point& point1, const Point& point2, const Point& point3, const Point& point4, const ColorRGB& inColor = ColorRGB(1, 0, 0));
     Quadrangle(const Quadrangle& Quadrangle);
 
+    virtual double getReflection() const;
+    virtual double getRefraction() const;
+    virtual double getAlpha() const;
     virtual Vector normal(const Point& point) const;
     virtual void setColor(const ColorRGB& inColor);
     virtual ColorRGB getColor() const;
@@ -45,6 +50,18 @@ Quadrangle::Quadrangle(const Quadrangle& quadrangle) {
         points[i] = quadrangle.points[i];
     }
     color = quadrangle.color;
+}
+
+double Quadrangle::getReflection() const {
+    return reflection;
+}
+
+double Quadrangle::getRefraction() const {
+    return refraction;
+}
+
+double Quadrangle::getAlpha() const {
+    return alpha;
 }
 
 Vector Quadrangle::normal(const Point& point) const {

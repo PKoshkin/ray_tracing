@@ -43,7 +43,7 @@ public:
     void addLighter(const Lighter& inLighter);
     Ray rayToPixel(const Pixel& pixel) const;
     ColorRGB runRay(const Pixel& pixel) const;
-    void process(int screenWidth, int screenHeight);
+    void process(size_t screenWidth, size_t screenHeight);
     void save(const char* file) const;
     void antialiase(size_t times = 1);
     void whiteBalance();
@@ -95,7 +95,7 @@ ColorRGB Scene::runRay(const Pixel& pixel) const {
     }
 }
 
-void Scene::process(int screenWidth, int screenHeight) {
+void Scene::process(size_t screenWidth, size_t screenHeight) {
     // Создаем экран нужного размера
     pixels.reserve(screenWidth);
     for (size_t i = 0; i < screenWidth; ++i) {
@@ -188,7 +188,7 @@ void Scene::save(const char* file) const {
     cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, pixels.size(), pixels[0].size());
     cairo_t *cr = cairo_create(surface);
     for (size_t i = 0; i < pixels.size(); ++i) {
-        for (int j = 0; j < pixels[i].size(); ++j) {
+        for (size_t j = 0; j < pixels[i].size(); ++j) {
             cairo_set_source_rgb(cr, pixels[i][j].getRed(), pixels[i][j].getGreen(), pixels[i][j].getBlue());
             cairo_rectangle(cr, pixels[i][j].getX(), pixels[i][j].getY(), 1, 1);
             cairo_fill(cr);

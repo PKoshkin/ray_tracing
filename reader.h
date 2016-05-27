@@ -22,7 +22,7 @@
 struct Material {
     std::string name;
     ColorRGB color;
-    double reflect, refract;
+    double reflect, refract, alpha;
 
     Material() {}
 };
@@ -77,7 +77,7 @@ public:
 
 Reader::Reader(const std::string fileName) : file(fileName, std::ios::in) {}
 
-int Reader::processScene(int width, int height, const char* fileName) {
+int Reader::processScene(int screenWidth, int screenHeight, const char* fileName) {
     if (read() == -1) {
         return -1;
     } else {
@@ -113,7 +113,7 @@ int Reader::processScene(int width, int height, const char* fileName) {
 
         Tree3D tree(figures);
         scene.setTree(tree);
-        scene.process(width, height);
+        scene.process(screenWidth, screenHeight);
         scene.whiteBalance();
         scene.save(fileName);
         return 0;
@@ -163,9 +163,10 @@ int Reader::readMaterial() {
             line >> newMaterial.color;
         } else if (word == "reflect") {
             line >> newMaterial.reflect;
-
         } else if (word == "refract") {
             line >> newMaterial.refract;
+        } else if (word == "alpha") {
+            line >> newMaterial.alpha;
         }
     } 
     sceneData.materials.push_back(newMaterial);
@@ -229,8 +230,6 @@ int Reader::readLightPoint() {
 }
 
 int Reader::readLightReference() {
-    Point place;
-    double power;
     while (word != "endreference") {
         if (!file) {
             // Файл закончился без закрытия блока

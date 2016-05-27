@@ -6,8 +6,8 @@
 #include "figure.h"
 
 struct Intersection {
-    double t; // Параметр луча, соответствующий точке пересечения
     std::shared_ptr<Figure> figure;
+    double t; // Параметр луча, соответствующий точке пересечения
 
     Intersection() {}
     Intersection(std::shared_ptr<Figure> inFigure, double inT);

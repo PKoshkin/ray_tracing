@@ -16,11 +16,17 @@ private:
     double radius;
     Point center;
     ColorRGB color;
+    double reflection;
+    double refraction;
+    double alpha;
 
 public:
     Sphere(const Point& inCenter, double radius, const ColorRGB& inColor = ColorRGB());
     Sphere(const Sphere& sphere);
 
+    virtual double getReflection() const;
+    virtual double getRefraction() const;
+    virtual double getAlpha() const;
     virtual Vector normal(const Point& point) const;
     virtual void setColor(const ColorRGB& inColor);
     virtual ColorRGB getColor() const;
@@ -34,6 +40,18 @@ public:
 Sphere::Sphere(const Point& inCenter, double inRadius, const ColorRGB& inColor) : radius(inRadius), center(inCenter), color(inColor) {}
 
 Sphere::Sphere(const Sphere& sphere) : radius(sphere.radius), center(sphere.center), color(sphere.color) {}
+
+double Sphere::getReflection() const {
+    return reflection;
+}
+
+double Sphere::getRefraction() const {
+    return refraction;
+}
+
+double Sphere::getAlpha() const {
+    return alpha;
+}
 
 Vector Sphere::normal(const Point& point) const {
     return (Vector(point) - Vector(center)).normalized();
