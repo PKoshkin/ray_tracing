@@ -15,16 +15,6 @@ int main(int argc, char** argv) {
         return 0;
     }
     Reader reader(argv[1]);
-
-    Optional<Scene> scene = reader.getScene();
-    if (!scene.hasValue()) {
-        std::cout << "Error occured!" << std::endl;
-        return 0;
-    }
-    Scene realScene = scene.getValue();
-
-    realScene.process(std::atoi(argv[2]), std::atoi(argv[3]));
-    realScene.whiteBalance();
-    realScene.save("not_antianalised.png");
+    reader.processScene(std::atoi(argv[2]), std::atoi(argv[3]), "not_antialiace.png");
     return 0;
 }

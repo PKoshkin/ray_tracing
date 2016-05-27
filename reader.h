@@ -48,7 +48,8 @@ private:
 public:
     Reader(const std::string fileName);
 
-    Optional<Scene> getScene();
+    //Optional<Scene> getScene();
+    int processScene(int width, int height, const char* fileName);
 
     int read();
 
@@ -76,9 +77,9 @@ public:
 
 Reader::Reader(const std::string fileName) : file(fileName, std::ios::in) {}
 
-Optional<Scene> Reader::getScene() {
+int Reader::processScene(int width, int height, const char* fileName) {
     if (read() == -1) {
-        return Optional<Scene>();
+        return -1;
     } else {
         double width = distance(sceneData.topRight, sceneData.topLeft);
         double height = distance(sceneData.topLeft, sceneData.bottomLeft);
@@ -95,7 +96,6 @@ Optional<Scene> Reader::getScene() {
         );
 
         double lightConstant = sceneData.lightDistance * sceneData.lightDistance / sceneData.lightPower;
-
         for (auto it = sceneData.lighters.begin(); it != sceneData.lighters.end(); ++it) {
             scene.addLighter(Lighter(it->first, lightConstant * it->second));
         }
@@ -110,10 +110,13 @@ Optional<Scene> Reader::getScene() {
                 }
             }
         }
-        Tree3D tree(figures);
 
+        Tree3D tree(figures);
         scene.setTree(tree);
-        return Optional<Scene>(scene);
+        scene.process(width, height);
+        scene.whiteBalance();
+        scene.save(fileName);
+        return 0;
     }
 }
 
